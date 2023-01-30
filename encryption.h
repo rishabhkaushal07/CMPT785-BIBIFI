@@ -5,14 +5,10 @@
 #ifndef CMPT785_BIBIFI_ENCRYPTION_H
 #define CMPT785_BIBIFI_ENCRYPTION_H
 
-#endif //CMPT785_BIBIFI_ENCRYPTION_H
+#endif // CMPT785_BIBIFI_ENCRYPTION_H
 
 // TODO: encrypt the filesystem
-void encrypt_filesystem() {
-
-}
+void encrypt_filesystem() {}
 
 // TODO: decrypt the filesystem
-void decrypt_filesystem() {
-
-}
+void decrypt_filesystem() {}
