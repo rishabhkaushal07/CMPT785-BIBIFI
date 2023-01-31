@@ -8,8 +8,36 @@
 #include "encryption.h"
 #include <string>
 #include <openssl/sha.h>
+#include <random>
 
 using namespace std;
+void create_admin_keyfile(std::string keyfile_name) {
+  std::fstream keyfile(keyfile_name, std::ios::out | std::ios::binary);
+  if (!keyfile.is_open()) {
+    std::cerr << "Error opening keyfile." << std::endl;
+    return;
+  }
+
+  std::random_device rd;
+  std::uniform_int_distribution<int> dist(0, 255);
+  std::string key;
+  for (int i = 0; i < 32; i++) {
+    key += dist(rd);
+  }
+
+  // encrypt the key using a suitable algorithm
+  // ...
+
+  keyfile.write(key.c_str(), key.length());
+  keyfile.close();
+}
+
+/* In main maybe add:
+  std::string keyfileName = "admin_keyfile";
+  create_admin_keyfile(keyfileName);
+  return 0;
+*/
+
 
 bool is_valid_keyfile(const string &keyfile_name);
   std::ifstream keyfile(keyfile_name);
