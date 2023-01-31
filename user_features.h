@@ -89,7 +89,7 @@ int user_features(string user_type) {
     if (directory_name.empty()) {
       cout << "directory_name not provided";
     } else {
-      system(("cat " + directory_name).c_str());
+      system(("mkdir " + directory_name).c_str());
     }
 
   } else if (cmd == "mkfile") {
@@ -103,6 +103,13 @@ int user_features(string user_type) {
      * If the file was previously shared, the target user should see the new
      * contents of the file.
      */
+
+    // TODO: delete this comment - A string is a group of characters with the last character being "\0".
+    // TODO: should support multi-word and multi-line input
+    iss >> filename >> contents;
+
+    string cat = "echo " + contents + " > " + filename;
+    system(cat.c_str());
 
   } else if (cmd == "exit") {
 
