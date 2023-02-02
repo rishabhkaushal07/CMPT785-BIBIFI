@@ -58,6 +58,15 @@ for the new shell will be "/", with personal and shared directories available fo
           used by the user to access the filesystem. If a user with this name already exists, print "User <username>
           already exists"
 
+## Running the program Locally
+
+- Can use the following `Makefile` commands:
+  - `make all` - to run `g++ -o fileserver main/main.cpp`
+    - This will create an executable called `fileserver`
+  - `make clean` - to run `rm -rf fileserver`
+    - This will delete the executable called `fileserver`
+- To execute the program, enter `./fileserver keyfile_name` in the cli.
+
 ## Local Linting
 
     `docker run -e RUN_LOCAL=true -v $PWD:/tmp/lint github/super-linter`
