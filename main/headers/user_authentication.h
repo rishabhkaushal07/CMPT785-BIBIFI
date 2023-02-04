@@ -40,25 +40,24 @@ void create_admin_keyfile(std::string keyfile_name) {
 
 
 bool is_valid_keyfile(const string &keyfile_name);
-  std::ifstream keyfile(keyfile_name);
-  if (!keyfile) {
-    std::cerr << "Error opening keyfile: " << keyfile_name << std::endl;
-    return false;
-  }
-  std::string keyfile_contents((std::istreambuf_iterator<char>(keyfile)),
-                               std::istreambuf_iterator<char>());
-  unsigned char hash[SHA256_DIGEST_LENGTH];
-  SHA256_CTX sha256;
-  SHA256_Init(&sha256);
-  SHA256_Update(&sha256, keyfile_contents.c_str(), keyfile_contents.length());
-  SHA256_Final(hash, &sha256);
-  std::string computed_hash = std::string((char *)hash, SHA256_DIGEST_LENGTH);
-  // Compare computed_hash with expected_hash
-  if (computed_hash == expected_hash) {
-    return true;
-  } else {
-    return false;
-  }
+std::ifstream keyfile(keyfile_name);
+if (!keyfile) {
+  std::cerr << "Error opening keyfile: " << keyfile_name << std::endl;
+  return false;
+}
+std::string keyfile_contents((std::istreambuf_iterator<char>(keyfile)),
+                             std::istreambuf_iterator<char>());
+unsigned char hash[SHA256_DIGEST_LENGTH];
+SHA256_CTX sha256;
+SHA256_Init(&sha256);
+SHA256_Update(&sha256, keyfile_contents.c_str(), keyfile_contents.length());
+SHA256_Final(hash, &sha256);
+std::string computed_hash = std::string((char *)hash, SHA256_DIGEST_LENGTH);
+// Compare computed_hash with expected_hash
+if (computed_hash == expected_hash) {
+  return true;
+} else {
+  return false;
 }
 # Note: This is just a sample code for validation and does not include the actual expected hash value, which should be stored securely in a separate location.
 

@@ -1,7 +1,7 @@
 #include <iostream>
 
-#include "user_authentication.h"
-#include "user_features.h"
+#include "headers/user_authentication.h"
+#include "headers/user_features.h"
 
 using namespace std;
 
