@@ -1,8 +1,6 @@
 #ifndef CMPT785_BIBIFI_USER_FEATURES_H
 #define CMPT785_BIBIFI_USER_FEATURES_H
 
-#endif // CMPT785_BIBIFI_USER_FEATURES_H
-
 #include <cstdlib>
 #include <iostream>
 #include <sstream>
@@ -142,3 +140,5 @@ int user_features(string user_type) {
   encrypt_filesystem();
   return 1;
 }
+
+#endif // CMPT785_BIBIFI_USER_FEATURES_H

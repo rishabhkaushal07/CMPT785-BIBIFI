@@ -3,8 +3,6 @@
 #ifndef CMPT785_BIBIFI_USER_AUTHENTICATION_H
 #define CMPT785_BIBIFI_USER_AUTHENTICATION_H
 
-#endif // CMPT785_BIBIFI_USER_AUTHENTICATION_H
-
 #include "encryption.h"
 #include <string>
 #include <openssl/sha.h>
@@ -101,3 +99,5 @@ bool is_valid_keyfile(const string &keyfile_name) {
   encrypt_filesystem();
   return false;
 }
+
+#endif // CMPT785_BIBIFI_USER_AUTHENTICATION_H
