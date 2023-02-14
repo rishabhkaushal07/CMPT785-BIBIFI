@@ -33,8 +33,8 @@ string normalize_path(std::string path) {
   }
   path.erase(i+1, n-i-1);
   if (path.length() > 1) {
-    std::string::iterator it = unique(path.begin(), path.end(), [](char a, char b) {
-      return a == b && a == '/';
+    std::string::iterator it = unique(path.begin(), path.end(), [](char currentChar, char nextChar) {
+      return currentChar == nextChar && currentChar == '/';
     });
     path.erase(it, path.end());
   }
