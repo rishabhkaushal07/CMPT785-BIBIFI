@@ -72,13 +72,13 @@ int user_features(string user_type) {
     getline(std::cin, input_feature);
 
     // get the first word (command) from the input
-    istringstream iss(input_feature);
-    iss >> cmd;
+    istringstream istring_stream(input_feature);
+    istring_stream >> cmd;
 
     if (cmd == "cd") {
 
       // get the directory name from istring stream buffer
-      iss >> directory_name;
+      istring_stream >> directory_name;
 
       directory_name = normalize_path(directory_name);
 
@@ -244,7 +244,7 @@ int user_features(string user_type) {
 
     } else if (cmd == "cat") {
 
-      iss >> filename;
+      istring_stream >> filename;
       if (filename.empty()) {
         cout << "filename not provided";
 
@@ -272,7 +272,7 @@ int user_features(string user_type) {
     } else if (cmd == "mkdir") {
 
       // create a new directory
-      iss >> directory_name;
+      istring_stream >> directory_name;
 
       if (directory_name.empty()) {
         cout << "directory_name not provided";
@@ -294,7 +294,7 @@ int user_features(string user_type) {
 
       // TODO: delete this comment - A string is a group of characters with the last character being "\0".
       // TODO: should support multi-word and multi-line input
-      iss >> filename >> contents;
+      istring_stream >> filename >> contents;
 
       string cat = "echo " + contents + " > " + filename;
       system(cat.c_str());
