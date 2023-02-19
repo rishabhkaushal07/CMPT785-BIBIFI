@@ -6,6 +6,8 @@
 #include "encryption.h"
 #include <string>
 
+#include "user_type.h"
+
 /*
 #include <openssl/sha.h>
 #include <random>
@@ -70,7 +72,7 @@ if (computed_hash == expected_hash) {
 # Note: This is just a sample code for validation and does not include the actual expected hash value, which should be stored securely in a separate location.
 */
 
-string get_type_of_user(const std::string &keyfile_name) {
+User_type get_type_of_user(const std::string &keyfile_name) {
 
   // TODO: first check if the keyfile is a valid file for or not
   if (is_valid_keyfile(keyfile_name)) {
@@ -81,14 +83,17 @@ string get_type_of_user(const std::string &keyfile_name) {
 
     // TODO: return the type of the user based on the keyfile
     string username;
+    User_type user_type;
     if (keyfile_name == "admin_keyfile_name") {
       username = "admin";
+      user_type = admin;
     } else {
       username = "user";
+      user_type = user;
     }
 
     cout << "Logged in as " << username << endl;
-    return username;
+    return user_type;
   }
 
   // Since the user wasn't authenticated, the login was failed and the program

@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "headers/user_type.h"
 #include "headers/user_authentication.h"
 #include "headers/user_features.h"
 
@@ -17,11 +18,13 @@ int main(int argc, char *argv[]) {
 
     string keyfile_name = argv[1];
 
+    string filesystem_path = fs::current_path();
+
     // TODO: check for user authentication
-    string user_type = get_type_of_user(keyfile_name);
-    if (user_type == "admin" || user_type == "user") {
+    User_type user_type = get_type_of_user(keyfile_name);
+    if (user_type == admin || user_type == user) {
       // user authenticated, allow "available commands" to be run
-      user_features(user_type);
+      user_features(user_type, filesystem_path);
     } else {
       // Since the user wasn't authenticated, the login was failed and the
       // program was exited.
