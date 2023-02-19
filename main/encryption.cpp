@@ -4,9 +4,7 @@
 #include <openssl/rand.h>
 #include <string.h>
 #include <iostream>
-#include <vector>
 #include <fstream>
-#include <cmath>
 using namespace std;
 
 const int BLOCK_SIZE = 16; //bytes
@@ -18,15 +16,7 @@ void handleErrors(void);
 void encrypt_file(string filePath);
 void decrypt_file(string filePath);
 
-streampos get_file_size(fstream file){
-    file.seekg(0, file.end);
-    streampos file_size = file.tellg();
-    file.seekg(0, file.beg);
-    return file_size;
-}
-
-void handleErrors(void)
-{
+void handleErrors(void) {
     ERR_print_errors_fp(stderr);
     abort();
 }
@@ -36,130 +26,175 @@ void encrypt_file(string filePath) {
     uint8_t iv[IV_SIZE];
     RAND_bytes(key, sizeof(key));
     RAND_bytes(iv, sizeof(iv));
-
-    // read the file to be encrypted
-    fstream file (filePath);
-    if (!file.is_open()) {
-        throw ios_base::failure("Failed to open file: " + filePath);
-    }
-    file.seekg(0, file.end);
-    streampos file_size = file.tellg();
-    file.seekg(0, file.beg);   
-    // ToDo: fix get_file_size call
-    // streampos file_size = get_file_size(file);
-    unsigned char *plaintext = new unsigned char[file_size];
-    file.read((char *)plaintext, file_size);
-    file.close();
-    
-    // Calculate the buffer size needed for ciphertext and allocate the space
-    int ciphertextBufferSize = ceil(file_size / (double) BLOCK_SIZE) * BLOCK_SIZE;
-    unsigned char ciphertext[ciphertextBufferSize];
     // Buffer for the tag
     unsigned char tag[TAG_SIZE];
 
-    // Create and initialise the context
+    // Open the input file for reading.
+    ifstream input_file(filePath);
+    if (!input_file) {
+        throw ios_base::failure("Failed to open file: " + filePath);
+    }
+
+    // Generate the output file path.
+    string output_filepath = filePath + ".enc";
+
+    // Open the output file for writing.
+    ofstream output_file(output_filepath);
+    if (!output_file) {
+        throw ios_base::failure("Failed to create target file.");
+    }
+
+    // Initialize the encryption context.
     EVP_CIPHER_CTX *ctx;
     if(!(ctx = EVP_CIPHER_CTX_new()))
         handleErrors();
-    int len;
-    int ciphertext_len;
 
     // Initialise the encryption operation
-    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL))
+    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, key, iv))
         handleErrors();
     // Set IV length
     if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, IV_SIZE, NULL))
         handleErrors();
-    // Initialise key and IV
-    if(1 != EVP_EncryptInit_ex(ctx, NULL, NULL, key, iv))
-        handleErrors();
 
-    // Encrypt the file contents 
-    // ToDo: encrypt block size chunks recursively
-    if(1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, strlen ((char *)plaintext)))
-        handleErrors();
-    ciphertext_len = len;
+    // Allocate buffers for the plaintext and ciphertext.
+    unsigned char plaintext[BLOCK_SIZE];
+    unsigned char ciphertext[BLOCK_SIZE + EVP_MAX_BLOCK_LENGTH];
+    int len = 0;
+    int ciphertext_len = 0;
 
-    // Finalise the encryption
-    if(1 != EVP_EncryptFinal_ex(ctx, ciphertext + len, &len))
+    // Read data from the input file and encrypt it in chunks.
+    while (input_file) {
+        input_file.read((char*)plaintext, BLOCK_SIZE);
+        if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, input_file.gcount())) {
+            handleErrors();
+        }
+        ciphertext_len = len;
+        output_file.write((char*)ciphertext, ciphertext_len);
+    }
+
+    // Finalize the encryption.
+    if (1 != EVP_EncryptFinal_ex(ctx, ciphertext, &len)) {
         handleErrors();
-    ciphertext_len += len;
+    }
 
     // Get the tag
     if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, TAG_SIZE, tag))
         handleErrors();
 
-    // To Do
-    // write the ciphertext to file on FS
-    // save key and iv
-    // save the tag for verifying before decrypting
+    // Save the tag, key and IV to files.
+    ofstream key_file(output_filepath + ".key");
+    if (!key_file) {
+        throw ios_base::failure("Failed to create key file.");
+    }
+    key_file.write((char*)key, KEY_SIZE);
 
-    // Clean up
+    ofstream iv_file(output_filepath + ".iv");
+    if (!iv_file) {
+        throw ios_base::failure("Failed to create IV file.");
+    }
+    iv_file.write((char*)iv, IV_SIZE);
+
+    ofstream tag_file(output_filepath + ".tag");
+    if (!tag_file) {
+        throw ios_base::failure("Failed to create Tag file.");
+    }
+    tag_file.write((char*)tag, TAG_SIZE);
+
+    // Clean up the context and close the files.
     EVP_CIPHER_CTX_free(ctx);
+    input_file.close();
+    output_file.close();
+    key_file.close();
+    iv_file.close();
+    tag_file.close();
 }
 
 void decrypt_file(string filePath) {
-    // ToDo: get key and iv from the persistent store
-    uint8_t key[KEY_SIZE];
-    uint8_t iv[IV_SIZE];
+    // Generate the output file path.
+    string output_filepath = filePath + ".dec";
 
-    unsigned char tag[TAG_SIZE];
-    
-    // read the file to be decrypted
-    fstream file (filePath);
-    if (!file.is_open()) {
+    // Open the input file for reading.
+    ifstream input_file(filePath);
+    if (!input_file) {
         throw ios_base::failure("Failed to open file: " + filePath);
     }
-    file.seekg(0, file.end);
-    streampos file_size = file.tellg();
-    file.seekg(0, file.beg);   
-    // ToDo: fix get_file_size call
-    // streampos file_size = get_file_size(file);
-    unsigned char *ciphertext = new unsigned char[file_size];
-    file.read((char *)ciphertext, file_size);
-    file.close();    
-    
-    // Buffer for the decrypted text
-    unsigned char decryptedtext[(int) file_size];
-    int decryptedtext_len, ciphertext_len;
 
+    // Open the output file for writing.
+    ofstream output_file(output_filepath);
+    if (!output_file) {
+        throw ios_base::failure("Failed to create target file.");
+    }
+
+    // Determine the tag, key and IV file paths.
+    string key_filepath = filePath + ".key";
+    string iv_filepath = filePath + ".iv";
+    string tag_filepath = filePath + ".tag";
+
+    // Open the tag, key and IV files for reading.
+    ifstream key_file(key_filepath);
+    ifstream iv_file(iv_filepath);
+    ifstream tag_file(tag_filepath);
+    if (!key_file || !iv_file || !tag_file) {
+        throw ios_base::failure("Failed to open tag, key or IV file.");
+    }
+
+    // Read the tag, key and IV from the files.
+    uint8_t key[KEY_SIZE];
+    uint8_t iv[IV_SIZE];
+    uint8_t tag[TAG_SIZE];
+    key_file.read((char*)key, KEY_SIZE);
+    iv_file.read((char*)iv, IV_SIZE);
+    tag_file.read((char*)tag, TAG_SIZE);
+
+    // Initialize the decryption context.
     EVP_CIPHER_CTX *ctx;
-    int len;
-    int plaintext_len;
-    int ret;
-
-    // Create and initialise the context
-    if(!(ctx = EVP_CIPHER_CTX_new()))
+    if (!(ctx = EVP_CIPHER_CTX_new())) {
         handleErrors();
+    }
 
     // Initialise the decryption operation
-    if(!EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, NULL, NULL))
+    if (1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_gcm(), NULL, key, iv)) {
         handleErrors();
+    }
 
     // Set IV length
-    if(!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, IV_SIZE, NULL))
+    if (1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_IVLEN, IV_SIZE, NULL)) {
         handleErrors();
+    }
 
-    // Initialise key and IV
-    if(!EVP_DecryptInit_ex(ctx, NULL, NULL, key, iv))
+    // Allocate buffers for the plaintext and ciphertext.
+    unsigned char ciphertext[BLOCK_SIZE + EVP_MAX_BLOCK_LENGTH];
+    unsigned char decryptedtext[BLOCK_SIZE];
+    int len = 0;
+    int decryptedtext_len = 32;
+    // Read data from the input file and decrypt it in chunks.
+    while (input_file) {
+        input_file.read((char*)ciphertext, BLOCK_SIZE);
+        if (1 != EVP_DecryptUpdate(ctx, decryptedtext, &len, ciphertext, input_file.gcount())) {
+            handleErrors();
+        }
+        decryptedtext_len = len;
+        output_file.write((char*)decryptedtext, decryptedtext_len);
+    }
+
+    // Set expected tag
+    if (!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, TAG_SIZE, (void *)tag)) {
         handleErrors();
+    }
 
-    // Decrypt the file contents 
-    // ToDo: decrypt block size chunks recursively
-    if(!EVP_DecryptUpdate(ctx, decryptedtext, &len, ciphertext, ciphertext_len))
+    // Finalize the decryption.
+    // This step verifies if tag is fine and errors out in case of changes to encrypted files.
+    if (1 != EVP_DecryptFinal_ex(ctx, decryptedtext, &len)) {
         handleErrors();
-    plaintext_len = len;
+    }
+    decryptedtext_len = len;
+    output_file.write((char*)decryptedtext, decryptedtext_len);
 
-    // Set expected tag value.
-    if(!EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_SET_TAG, TAG_SIZE, tag))
-        handleErrors();
-
-    // Finalise the decryption
-    ret = EVP_DecryptFinal_ex(ctx, decryptedtext + len, &len);
-
-    // Clean up
+    // Clean up the context and close the files.
     EVP_CIPHER_CTX_free(ctx);
-
-    // Add a NULL terminator. We are expecting printable text
-    decryptedtext[decryptedtext_len] = '\0';
+    input_file.close();
+    output_file.close();
+    key_file.close();
+    iv_file.close();
+    tag_file.close();
 }
