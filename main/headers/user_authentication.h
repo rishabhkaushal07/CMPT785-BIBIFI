@@ -5,10 +5,15 @@
 
 #include "encryption.h"
 #include <string>
+
+/*
 #include <openssl/sha.h>
 #include <random>
+ */
 
 using namespace std;
+
+/*
 void create_admin_keyfile(std::string keyfile_name) {
   std::fstream keyfile(keyfile_name, std::ios::out | std::ios::binary);
   if (!keyfile.is_open()) {
@@ -30,6 +35,8 @@ void create_admin_keyfile(std::string keyfile_name) {
   keyfile.close();
 }
 
+ */
+
 /* In main maybe add:
   std::string keyfileName = "admin_keyfile";
   create_admin_keyfile(keyfileName);
@@ -37,7 +44,10 @@ void create_admin_keyfile(std::string keyfile_name) {
 */
 
 
+
 bool is_valid_keyfile(const string &keyfile_name);
+
+/*
 std::ifstream keyfile(keyfile_name);
 if (!keyfile) {
   std::cerr << "Error opening keyfile: " << keyfile_name << std::endl;
@@ -58,6 +68,7 @@ if (computed_hash == expected_hash) {
   return false;
 }
 # Note: This is just a sample code for validation and does not include the actual expected hash value, which should be stored securely in a separate location.
+*/
 
 string get_type_of_user(const std::string &keyfile_name) {
 
