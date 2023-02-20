@@ -8,6 +8,8 @@
 #include <unistd.h>
 #include <filesystem>
 
+#include "user_type.h"
+
 using namespace std;
 namespace fs = std::filesystem;
 
@@ -41,7 +43,7 @@ string normalize_path(std::string path) {
   return path;
 }
 
-int user_features(string user_type) {
+int user_features(User_type user_type, string filesystem_path) {
 
   cout << "Available commands are: \n" << endl;
 
@@ -54,13 +56,13 @@ int user_features(string user_type) {
           "mkfile <filename> <contents> \n"
           "exit \n";
 
-  if (user_type == "admin") {
+  if (user_type == admin) {
     // if admin, allow the following command
     cout << "adduser <username>" << endl;
 
     // also set root path to admin path which is the whole fs
     root_path = admin_root_path;
-  } else if (user_type == "user") {
+  } else if (user_type == user) {
     // set root path = user's root path which is its own directory
     root_path = user_root_path;
   }
@@ -233,14 +235,36 @@ int user_features(string user_type) {
 
       }
 
-
     } else if (cmd == "pwd") {
 
-      system("pwd");
+      string pwd = fs::current_path();
+      pwd.erase(0, filesystem_path.length());
+      cout << pwd << endl;
 
     } else if (cmd == "ls") {
-
-      system("ls");
+      
+      string path = fs::current_path();
+      cout << "d -> ." << endl;
+      if (path != filesystem_path + "/filesystem") {
+        cout << "d -> .." << endl;
+      }
+      for (fs::directory_entry entry : fs::directory_iterator(path)) {
+        string entry_path = entry.path();
+        int delete_upto = entry_path.find_last_of('/') + 1;
+        entry_path.erase(0, delete_upto);
+        fs::file_status status = fs::status(entry_path);
+        switch (status.type()) {
+          case fs::file_type::directory: {
+            cout << "d -> " << entry_path << endl;
+            break;
+          }
+          case fs::file_type::regular: {
+            cout << "f -> " << entry_path << endl; 
+            break;
+          }
+          default: break;
+        }
+      }
 
     } else if (cmd == "cat") {
 
@@ -305,7 +329,7 @@ int user_features(string user_type) {
       encrypt_filesystem();
       exit(EXIT_FAILURE);
 
-    } else if ((cmd == "adduser") && (user_type == "admin")) {
+    } else if ((cmd == "adduser") && (user_type == admin)) {
 
       // TODO
       /*
@@ -322,8 +346,8 @@ int user_features(string user_type) {
       cout << "Invalid Command" << endl;
 
       // before exiting encrypt the filesystem again
-      encrypt_filesystem();
-      return 1;
+      // encrypt_filesystem();
+      // return 1;
     }
 
   } while (cmd != "exit"); // only exit out of command line when using "exit" cmd
