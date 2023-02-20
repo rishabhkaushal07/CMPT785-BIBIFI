@@ -239,11 +239,32 @@ int user_features(User_type user_type, string filesystem_path) {
 
       string pwd = fs::current_path();
       pwd.erase(0, filesystem_path.length());
-      cout << pwd << "\n";
+      cout << pwd << endl;
 
     } else if (cmd == "ls") {
-
-      system("ls");
+      
+      string path = fs::current_path();
+      cout << "d -> ." << endl;
+      if (path != filesystem_path + "/filesystem") {
+        cout << "d -> .." << endl;
+      }
+      for (fs::directory_entry entry : fs::directory_iterator(path)) {
+        string entry_path = entry.path();
+        int delete_upto = entry_path.find_last_of('/') + 1;
+        entry_path.erase(0, delete_upto);
+        fs::file_status status = fs::status(entry_path);
+        switch (status.type()) {
+          case fs::file_type::directory: {
+            cout << "d -> " << entry_path << endl;
+            break;
+          }
+          case fs::file_type::regular: {
+            cout << "f -> " << entry_path << endl; 
+            break;
+          }
+          default: break;
+        }
+      }
 
     } else if (cmd == "cat") {
 
