@@ -13,18 +13,17 @@ const int TAG_SIZE = 16; //bytes
 const int IV_SIZE = 16; //bytes
 
 void handleErrors(void);
-void encrypt_file(string filePath);
-void decrypt_file(string filePath);
+void encrypt_file(string filePath, unsigned char *key);
+void decrypt_file(string filePath, unsigned char *key);
 
 void handleErrors(void) {
     ERR_print_errors_fp(stderr);
     abort();
 }
 
-void encrypt_file(string filePath) {
-    uint8_t key[KEY_SIZE];
+void encrypt_file(string filePath, unsigned char *key) {
+    // generate random iv for each file
     uint8_t iv[IV_SIZE];
-    RAND_bytes(key, sizeof(key));
     RAND_bytes(iv, sizeof(iv));
     // Buffer for the tag
     unsigned char tag[TAG_SIZE];
@@ -62,6 +61,10 @@ void encrypt_file(string filePath) {
     int len = 0;
     int ciphertext_len = 0;
 
+    // leave space for iv and tag at the beginning of the output file
+    output_file.write("0", IV_SIZE);
+    output_file.write("0", TAG_SIZE);
+
     // Read data from the input file and encrypt it in chunks.
     while (input_file) {
         input_file.read((char*)plaintext, BLOCK_SIZE);
@@ -76,40 +79,25 @@ void encrypt_file(string filePath) {
     if (1 != EVP_EncryptFinal_ex(ctx, ciphertext, &len)) {
         handleErrors();
     }
+    ciphertext_len = len;
+    output_file.write((char*)ciphertext, ciphertext_len);
 
     // Get the tag
     if(1 != EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_GCM_GET_TAG, TAG_SIZE, tag))
         handleErrors();
 
-    // Save the tag, key and IV to files.
-    ofstream key_file(output_filepath + ".key");
-    if (!key_file) {
-        throw ios_base::failure("Failed to create key file.");
-    }
-    key_file.write((char*)key, KEY_SIZE);
-
-    ofstream iv_file(output_filepath + ".iv");
-    if (!iv_file) {
-        throw ios_base::failure("Failed to create IV file.");
-    }
-    iv_file.write((char*)iv, IV_SIZE);
-
-    ofstream tag_file(output_filepath + ".tag");
-    if (!tag_file) {
-        throw ios_base::failure("Failed to create Tag file.");
-    }
-    tag_file.write((char*)tag, TAG_SIZE);
+    // write iv and tag to the output file
+    output_file.seekp(0);
+    output_file.write((char*)iv, IV_SIZE);
+    output_file.write((char*)tag, TAG_SIZE);
 
     // Clean up the context and close the files.
     EVP_CIPHER_CTX_free(ctx);
     input_file.close();
     output_file.close();
-    key_file.close();
-    iv_file.close();
-    tag_file.close();
 }
 
-void decrypt_file(string filePath) {
+void decrypt_file(string filePath, unsigned char *key) {
     // Generate the output file path.
     string output_filepath = filePath + ".dec";
 
@@ -125,26 +113,11 @@ void decrypt_file(string filePath) {
         throw ios_base::failure("Failed to create target file.");
     }
 
-    // Determine the tag, key and IV file paths.
-    string key_filepath = filePath + ".key";
-    string iv_filepath = filePath + ".iv";
-    string tag_filepath = filePath + ".tag";
-
-    // Open the tag, key and IV files for reading.
-    ifstream key_file(key_filepath);
-    ifstream iv_file(iv_filepath);
-    ifstream tag_file(tag_filepath);
-    if (!key_file || !iv_file || !tag_file) {
-        throw ios_base::failure("Failed to open tag, key or IV file.");
-    }
-
-    // Read the tag, key and IV from the files.
-    uint8_t key[KEY_SIZE];
+    // Read tag and IV from the file.
     uint8_t iv[IV_SIZE];
     uint8_t tag[TAG_SIZE];
-    key_file.read((char*)key, KEY_SIZE);
-    iv_file.read((char*)iv, IV_SIZE);
-    tag_file.read((char*)tag, TAG_SIZE);
+    input_file.read((char*)iv, IV_SIZE);
+    input_file.read((char*)tag, TAG_SIZE);
 
     // Initialize the decryption context.
     EVP_CIPHER_CTX *ctx;
@@ -194,7 +167,4 @@ void decrypt_file(string filePath) {
     EVP_CIPHER_CTX_free(ctx);
     input_file.close();
     output_file.close();
-    key_file.close();
-    iv_file.close();
-    tag_file.close();
 }
