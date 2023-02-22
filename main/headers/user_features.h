@@ -292,16 +292,180 @@ int user_features(User_type user_type, string filesystem_path) {
      * file.
      *
        */
-
     } else if (cmd == "mkdir") {
 
       // create a new directory
       istring_stream >> directory_name;
 
+      // construct a target (absolute) path from the directory name
+      fs::path current_path = fs::current_path();
+      fs::path target_path = fs::absolute(directory_name);
+      fs::path relative_path = fs::relative(target_path, root_path);
+      fs::path resolved_root = fs::absolute(root_path);
+      fs::path resolved_target = fs::absolute(target_path);
+
       if (directory_name.empty()) {
+
         cout << "directory_name not provided";
+
+      } else if (directory_name == "." || directory_name == "..") {
+
+        // . and .. directories always exist - try `ls -alh` to see all the dirs
+        cerr << "Directory already exists" << endl;
+
       } else {
-        system(("mkdir " + directory_name).c_str());
+
+        if (target_path.has_relative_path()) {
+
+            if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
+
+              // If a directory with this name exists, print "Directory already exists"
+              cerr << "Directory already exists" << endl;
+
+            } else {
+
+              if(target_path.lexically_relative(root_path).native().front() == '.') {
+
+                if(directory_name == "." || directory_name == "..") {
+
+                  if (target_path == root_path) {
+
+                    if (current_path == root_path) {
+
+                      // like `mkdir .`  - so no need to create the directory
+                      cerr << "Directory already exists" << endl;
+
+                    } else {
+
+                      // create directory
+                      system(("mkdir " + directory_name).c_str());
+
+                    }
+
+                  } else if (target_path == root_path.parent_path()) {
+
+                    // like `going back one directory ..`
+                    // create directory
+                    system(("mkdir " + directory_name).c_str());
+
+                  } else {
+
+                    // if the directory path is outside the root path
+                    // Warn and stay in the current directory
+                    cerr << "Directory creation path is outside of the root directory, try again " << endl;
+
+                  }
+
+                } else {
+
+                  if (target_path == root_path) {
+
+                    if (current_path == root_path) {
+
+                      // like `mkdir .`  - so no need to change the directory
+                      cerr << "Directory already exists" << endl;
+
+                    } else {
+
+                      // like creating root path's dir
+                      cerr << "Directory already exists" << endl;
+
+                    }
+
+                  } else {
+
+                    // if the directory path is outside the root path
+                    // Warn and stay in the current directory
+                    cerr << "Directory creation path is outside of the root directory, try again " << endl;
+
+                  }
+
+                }
+
+              } else {
+
+                if (directory_name == "/") {
+
+                  // mkdir /  means creating current user’s root directory
+                  // but this should already exist so error out
+                  cerr << "Directory already exists" << endl;
+
+                } else if (target_path == root_path) {
+
+                  if (current_path == root_path) {
+
+                    // like `mkdir .`
+                    cerr << "Directory already exists" << endl;
+
+                  } else {
+
+                    // target path going to root path
+                    // but this should already exist so error out
+                    cerr << "Directory already exists" << endl;
+
+                  }
+
+                } else if (target_path == root_path.parent_path()) {
+
+                  // like `mkdir ..`
+                  cerr << "Directory already exists" << endl;
+
+                } else if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
+
+                  if (relative_path.has_parent_path()) {
+
+                    // if the directory path is outside the root path
+                    // Warn and stay in the current directory
+                    cerr << "Directory creation path is outside of the root directory, try again " << endl;
+
+                  } else {
+
+                    if (relative_path.string().find("..") != std::string::npos) {
+
+                      // relative_path contains .. meaning it is trying to go outside root directory
+                      // if the directory path is outside the root path
+                      // Warn and stay in the current directory
+                      cerr << "Directory creation path is outside of the root directory, try again " << endl;
+
+                    } else {
+
+                      // the directory exists, can't create it
+                      cerr << "Directory already exists" << endl;
+
+                    }
+
+                  }
+
+                } else {
+
+                  // directory doesn't exist, so create it
+                  system(("mkdir " + directory_name).c_str());
+
+                }
+
+              }
+
+            }
+
+        } else {
+
+            if (directory_name == "/"){
+
+            // This should vary depending upon what kind of user is currently logged in
+            // mkdir /  means creating current user’s root directory
+            // but this should already exist so error out
+            cerr << "Directory already exists" << endl;
+
+            } else {
+
+            // if the directory path is outside the root path
+            // Warn and stay in the current directory
+            cerr << "Directory creation path is outside of the root directory, try again " << endl;
+
+            }
+
+        }
+
       }
 
     } else if (cmd == "mkfile") {
