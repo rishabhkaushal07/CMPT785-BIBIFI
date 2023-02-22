@@ -13,8 +13,8 @@ const int TAG_SIZE = 16; //bytes
 const int IV_SIZE = 16; //bytes
 
 void handleErrors(void);
-void encrypt_file(string filePath, unsigned char *key);
-void decrypt_file(string filePath, unsigned char *key);
+void encrypt_file(string filePath, string content, unsigned char *key);
+string decrypt_file(string filePath, unsigned char *key);
 
 void handleErrors(void) {
     ERR_print_errors_fp(stderr);
@@ -45,21 +45,15 @@ void encrypt_user_files(dir_path, key){
     }
 }
 
-void encrypt_file(string filePath, unsigned char *key) {
+void encrypt_file(string filePath, string content, unsigned char *key) {
     // generate random iv for each file
     uint8_t iv[IV_SIZE];
     RAND_bytes(iv, sizeof(iv));
     // Buffer for the tag
     unsigned char tag[TAG_SIZE];
 
-    // Open the input file for reading.
-    ifstream input_file(filePath);
-    if (!input_file) {
-        throw ios_base::failure("Failed to open file: " + filePath);
-    }
-
     // Generate the output file path.
-    string output_filepath = filePath + ".enc";
+    string output_filepath = filename_encryption(filePath);
 
     // Open the output file for writing.
     ofstream output_file(output_filepath);
@@ -85,14 +79,25 @@ void encrypt_file(string filePath, unsigned char *key) {
     int len = 0;
     int ciphertext_len = 0;
 
-    // leave space for iv and tag at the beginning of the output file
+    // allocate space for iv and tag at the beginning of the output file
     output_file.write("0", IV_SIZE);
     output_file.write("0", TAG_SIZE);
 
-    // Read data from the input file and encrypt it in chunks.
-    while (input_file) {
-        input_file.read((char*)plaintext, BLOCK_SIZE);
-        if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, input_file.gcount())) {
+    // Read data from the input content string and encrypt it in chunks.
+    size_t pos = 0;
+    size_t length = content.length();
+    while (pos < length) {
+        int ptlen = length - pos;
+        if(ptlen >= BLOCK_SIZE) {
+            content.substr(pos, BLOCK_SIZE).copy((char*)plaintext, BLOCK_SIZE);
+            ptlen = BLOCK_SIZE;
+        }
+        else {
+            content.substr(pos, ptlen).copy((char*)plaintext, ptlen);
+        }
+        pos += ptlen;
+        
+        if (1 != EVP_EncryptUpdate(ctx, ciphertext, &len, plaintext, ptlen)) {
             handleErrors();
         }
         ciphertext_len = len;
@@ -117,24 +122,15 @@ void encrypt_file(string filePath, unsigned char *key) {
 
     // Clean up the context and close the files.
     EVP_CIPHER_CTX_free(ctx);
-    input_file.close();
     output_file.close();
 }
 
-void decrypt_file(string filePath, unsigned char *key) {
-    // Generate the output file path.
-    string output_filepath = filePath + ".dec";
-
+string decrypt_file(string filePath, unsigned char *key) {
+    string ptoutput = "";
     // Open the input file for reading.
-    ifstream input_file(filePath);
+    ifstream input_file(filename_decryption(filePath));
     if (!input_file) {
         throw ios_base::failure("Failed to open file: " + filePath);
-    }
-
-    // Open the output file for writing.
-    ofstream output_file(output_filepath);
-    if (!output_file) {
-        throw ios_base::failure("Failed to create target file.");
     }
 
     // Read tag and IV from the file.
@@ -163,15 +159,14 @@ void decrypt_file(string filePath, unsigned char *key) {
     unsigned char ciphertext[BLOCK_SIZE + EVP_MAX_BLOCK_LENGTH];
     unsigned char decryptedtext[BLOCK_SIZE];
     int len = 0;
-    int decryptedtext_len = 32;
     // Read data from the input file and decrypt it in chunks.
     while (input_file) {
         input_file.read((char*)ciphertext, BLOCK_SIZE);
         if (1 != EVP_DecryptUpdate(ctx, decryptedtext, &len, ciphertext, input_file.gcount())) {
             handleErrors();
         }
-        decryptedtext_len = len;
-        output_file.write((char*)decryptedtext, decryptedtext_len);
+        string str((char*)decryptedtext, len);
+        ptoutput.append(str);
     }
 
     // Set expected tag
@@ -184,11 +179,11 @@ void decrypt_file(string filePath, unsigned char *key) {
     if (1 != EVP_DecryptFinal_ex(ctx, decryptedtext, &len)) {
         handleErrors();
     }
-    decryptedtext_len = len;
-    output_file.write((char*)decryptedtext, decryptedtext_len);
+    string str((char*)decryptedtext, len);
+    ptoutput.append(str);
 
     // Clean up the context and close the files.
     EVP_CIPHER_CTX_free(ctx);
     input_file.close();
-    output_file.close();
+    return ptoutput;
 }
