@@ -69,45 +69,16 @@ void add_user(const string& username, const filesystem::path& public_key_dir, co
     cout << "User " << username << " added successfully." << endl;
 }
 
-
-using namespace std;
-/* void create_admin_keyfile(std::string keyfile_name) {
-  std::fstream keyfile(keyfile_name, std::ios::out | std::ios::binary);
-  if (!keyfile.is_open()) {
-    std::cerr << "Error opening keyfile." << std::endl;
-    return;
-  }
-
-  std::random_device rd;
-  std::uniform_int_distribution<int> dist(0, 255);
-  std::string key;
-  for (int i = 0; i < 32; i++) {
-    key += dist(rd);
-  }
-
-  // encrypt the key using a suitable algorithm
-  // ...
-
-  keyfile.write(key.c_str(), key.length());
-  keyfile.close();
-}
-
-In main maybe add:
-  std::string keyfileName = "admin_keyfile";
-  create_admin_keyfile(keyfileName);
-  return 0;
-*/
-
 string get_type_of_user(const std::string &keyfile_name) {
 
-  // TODO: first check if the keyfile is a valid file for or not
+  // First check if the keyfile is a valid file for or not
   if (is_valid_keyfile(keyfile_name)) {
 
-    // after authenticating that the keyfile is valid and appropriate
-    // TODO: Decrypt the filesystem and,
+    // After authenticating that the keyfile is valid and appropriate
+    // Decrypt the filesystem and,
     decrypt_filesystem();
 
-    // TODO: return the type of the user based on the keyfile
+    // Return the type of the user based on the keyfile
     string username;
     if (keyfile_name == "admin_keyfile_name") {
       username = "admin";
@@ -119,24 +90,48 @@ string get_type_of_user(const std::string &keyfile_name) {
     return username;
   }
 
-  // Since the user wasn't authenticated, the login was failed and the program
-  // was exited.
+  // Since the user wasn't authenticated, the login was failed and the program was exited.
   cout << "Invalid keyfile" << endl;
-  // before exiting encrypt the filesystem again
+  // Before exiting encrypt the filesystem again
   encrypt_filesystem();
   exit(EXIT_FAILURE);
 }
 
-// TODO: Implement authentication, currently it just checks that keyfile should
-// not be empty
-bool is_valid_keyfile(const string &keyfile_name) {
-  if (!keyfile_name.empty()) {
-    return true;
-  }
+// TODO: Implement authentication, currently it just checks that keyfile should not be empty
 
-  // before exiting encrypt the filesystem again
-  encrypt_filesystem();
-  return false;
+bool is_valid_keyfile(const string &keyfile_name) {
+    EVP_PKEY* pkey = nullptr;
+    FILE* fp = nullptr;
+    bool result = false;
+
+    // Open the keyfile for reading
+    fp = fopen(keyfile_name.c_str(), "rb");
+    if (!fp) {
+        std::cerr << "Error opening keyfile: " << keyfile_name << std::endl;
+        goto cleanup;
+    }
+
+    // Read the public key from the keyfile
+    pkey = PEM_read_PUBKEY(fp, nullptr, nullptr, nullptr);
+    if (!pkey) {
+        std::cerr << "Error reading public key from keyfile: " << keyfile_name << std::endl;
+        goto cleanup;
+    }
+
+    // If we got this far, the keyfile is valid
+    result = true;
+
+cleanup:
+    // Clean up resources
+    if (fp) {
+        fclose(fp);
+    }
+    if (pkey) {
+        EVP_PKEY_free(pkey);
+    }
+    // before exiting encrypt the filesystem again
+    encrypt_filesystem();
+    return result;
 }
 
 #endif // CMPT785_BIBIFI_USER_AUTHENTICATION_H
