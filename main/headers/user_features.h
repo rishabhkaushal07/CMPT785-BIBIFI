@@ -108,8 +108,9 @@ int user_features(User_type user_type, string filesystem_path) {
 
                 // if the directory path is outside the root path
                 // Warn and stay in the current directory
-                cerr << "Directory " << target_path << " is outside of the root directory " << root_path << endl;
-                cout << "Staying in current directory: " << fs::current_path() << std::endl;
+                cerr << "Directory is outside of the root directory." << endl;
+                cout << "Staying in current directory." << endl;
+
               }
 
             } else {
@@ -130,8 +131,9 @@ int user_features(User_type user_type, string filesystem_path) {
 
                 // if the directory path is outside the root path
                 // Warn and stay in the current directory
-                cerr << "Directory " << target_path << " is outside of the root directory " << root_path << endl;
-                cout << "Staying in current directory: " << fs::current_path() << std::endl;
+                cerr << "Directory is outside of the root directory." << endl;
+                cout << "Staying in current directory." << endl;
+
               }
 
             }
@@ -165,8 +167,9 @@ int user_features(User_type user_type, string filesystem_path) {
 
                 // if the directory path is outside the root path
                 // Warn and stay in the current directory
-                cerr << "Directory " << target_path << " is outside of the root directory " << root_path << endl;
-                cout << "Staying in current directory: " << fs::current_path() << std::endl;
+                cerr << "Directory is outside of the root directory." << endl;
+                cout << "Staying in current directory." << endl;
+
               } else {
 
                 if (relative_path.string().find("..") != std::string::npos) {
@@ -174,8 +177,9 @@ int user_features(User_type user_type, string filesystem_path) {
                   // relative_path contains .. meaning it is trying to go outside root directory
                   // if the directory path is outside the root path
                   // Warn and stay in the current directory
-                  cerr << "Directory " << target_path << " is outside of the root directory " << root_path << endl;
-                  cout << "Staying in current directory: " << fs::current_path() << std::endl;
+                  cerr << "Directory is outside of the root directory." << endl;
+                  cout << "Staying in current directory." << endl;
+
                 } else {
 
                   // the directory exists, so we can change to given directory
@@ -187,8 +191,9 @@ int user_features(User_type user_type, string filesystem_path) {
             } else {
 
               // If a directory doesn't exist, the user should stay in the current directory
-              cerr << "Directory " << target_path << " does not exist." << endl;
-              cout << "Staying in current directory:" << fs::current_path() << std::endl;
+              cerr << "Directory does not exist." << endl;
+              cout << "Staying in current directory." << endl;
+
             }
 
           }
@@ -196,8 +201,9 @@ int user_features(User_type user_type, string filesystem_path) {
         } else {
 
           // If a directory doesn't exist, the user should stay in the current directory
-          cerr << "Directory " << target_path << " does not exist." << endl;
-          cout << "Staying in current directory:" << fs::current_path() << std::endl;
+          cerr << "Directory does not exist." << endl;
+          cout << "Staying in current directory." << endl;
+
         }
 
       } else {
@@ -211,8 +217,9 @@ int user_features(User_type user_type, string filesystem_path) {
 
           // if the directory path is outside the root path
           // Warn and stay in the current directory
-          cerr << "Directory " << target_path << " is outside of the root directory " << root_path << endl;
-          cout << "Staying in current directory: " << fs::current_path() << std::endl;
+          cerr << "Directory is outside of the root directory." << endl;
+          cout << "Staying in current directory." << endl;
+
         }
 
       }
@@ -293,7 +300,7 @@ int user_features(User_type user_type, string filesystem_path) {
       } else if (directory_name == "." || directory_name == "..") {
 
         // . and .. directories always exist - try `ls -alh` to see all the dirs
-        cerr << "Directory already exists" << endl;
+        cerr << "Directory already exists." << endl;
 
       } else {
 
@@ -302,7 +309,7 @@ int user_features(User_type user_type, string filesystem_path) {
             if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
 
               // If a directory with this name exists, print "Directory already exists"
-              cerr << "Directory already exists" << endl;
+              cerr << "Directory already exists." << endl;
 
             } else {
 
@@ -315,7 +322,7 @@ int user_features(User_type user_type, string filesystem_path) {
                     if (current_path == root_path) {
 
                       // like `mkdir .`  - so no need to create the directory
-                      cerr << "Directory already exists" << endl;
+                      cerr << "Directory already exists." << endl;
 
                     } else {
 
@@ -334,7 +341,7 @@ int user_features(User_type user_type, string filesystem_path) {
 
                     // if the directory path is outside the root path
                     // Warn and stay in the current directory
-                    cerr << "Directory creation path is outside of the root directory, try again " << endl;
+                    cerr << "Directory is outside of the root directory." << endl;
 
                   }
 
@@ -345,12 +352,12 @@ int user_features(User_type user_type, string filesystem_path) {
                     if (current_path == root_path) {
 
                       // like `mkdir .`  - so no need to change the directory
-                      cerr << "Directory already exists" << endl;
+                      cerr << "Directory already exists." << endl;
 
                     } else {
 
                       // like creating root path's dir
-                      cerr << "Directory already exists" << endl;
+                      cerr << "Directory already exists." << endl;
 
                     }
 
@@ -358,7 +365,7 @@ int user_features(User_type user_type, string filesystem_path) {
 
                     // if the directory path is outside the root path
                     // Warn and stay in the current directory
-                    cerr << "Directory creation path is outside of the root directory, try again " << endl;
+                    cerr << "Directory is outside of the root directory." << endl;
 
                   }
 
@@ -370,27 +377,27 @@ int user_features(User_type user_type, string filesystem_path) {
 
                   // mkdir /  means creating current user’s root directory
                   // but this should already exist so error out
-                  cerr << "Directory already exists" << endl;
+                  cerr << "Directory already exists." << endl;
 
                 } else if (target_path == root_path) {
 
                   if (current_path == root_path) {
 
                     // like `mkdir .`
-                    cerr << "Directory already exists" << endl;
+                    cerr << "Directory already exists." << endl;
 
                   } else {
 
                     // target path going to root path
                     // but this should already exist so error out
-                    cerr << "Directory already exists" << endl;
+                    cerr << "Directory already exists." << endl;
 
                   }
 
                 } else if (target_path == root_path.parent_path()) {
 
                   // like `mkdir ..`
-                  cerr << "Directory already exists" << endl;
+                  cerr << "Directory already exists." << endl;
 
                 } else if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
 
@@ -398,7 +405,7 @@ int user_features(User_type user_type, string filesystem_path) {
 
                     // if the directory path is outside the root path
                     // Warn and stay in the current directory
-                    cerr << "Directory creation path is outside of the root directory, try again " << endl;
+                    cerr << "Directory is outside of the root directory." << endl;
 
                   } else {
 
@@ -407,12 +414,12 @@ int user_features(User_type user_type, string filesystem_path) {
                       // relative_path contains .. meaning it is trying to go outside root directory
                       // if the directory path is outside the root path
                       // Warn and stay in the current directory
-                      cerr << "Directory creation path is outside of the root directory, try again " << endl;
+                      cerr << "Directory is outside of the root directory." << endl;
 
                     } else {
 
                       // the directory exists, can't create it
-                      cerr << "Directory already exists" << endl;
+                      cerr << "Directory already exists." << endl;
 
                     }
 
@@ -436,13 +443,13 @@ int user_features(User_type user_type, string filesystem_path) {
             // This should vary depending upon what kind of user is currently logged in
             // mkdir /  means creating current user’s root directory
             // but this should already exist so error out
-            cerr << "Directory already exists" << endl;
+            cerr << "Directory already exists." << endl;
 
             } else {
 
             // if the directory path is outside the root path
             // Warn and stay in the current directory
-            cerr << "Directory creation path is outside of the root directory, try again " << endl;
+            cerr << "Directory is outside of the root directory." << endl;
 
             }
 
