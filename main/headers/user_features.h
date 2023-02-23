@@ -165,10 +165,30 @@ int user_features(User_type user_type, string filesystem_path) {
 
               if (relative_path.has_parent_path()) {
 
-                // if the directory path is outside the root path
-                // Warn and stay in the current directory
-                cerr << "Directory is outside of the root directory." << endl;
-                cout << "Staying in current directory." << endl;
+                if (relative_path.string().find("..") != string::npos) {
+
+                  // if the directory path is outside the root path
+                  // Warn and stay in the current directory
+                  cerr << "Directory is outside of the root directory." << endl;
+                  cout << "Staying in current directory." << endl;
+
+                } else {
+
+                  // relative path is trying a subdirectory
+                  if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
+
+                    // the directory exists, so we can change to given directory
+                    fs::current_path(target_path);
+
+                  } else {
+
+                    // If a directory doesn't exist, the user should stay in the current directory
+                    cerr << "Directory does not exist." << endl;
+                    cout << "Staying in current directory." << endl;
+
+                  }
+
+                }
 
               } else {
 
@@ -406,6 +426,34 @@ int user_features(User_type user_type, string filesystem_path) {
                     // if the directory path is outside the root path
                     // Warn and stay in the current directory
                     cerr << "Directory is outside of the root directory." << endl;
+
+                    if (relative_path.string().find("..") != string::npos) {
+
+                      // if the directory path is outside the root path
+                      // Warn and stay in the current directory
+                      cerr << "Directory is outside of the root directory." << endl;
+
+                    } else {
+
+                      // relative path is trying a subdirectory
+                      if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
+
+                        // the directory exists, so we shouldn't create it
+                        cerr << "Directory already exists." << endl;
+
+                      } else {
+
+                        // If a directory doesn't exist,
+                        // then check if there exists its parent directory
+                        // if parent directory exists it's okay to create the given directory
+                        // else do not create it
+                        // good thing is that system() automatically checks this
+                        // so no need to explicitly check for it
+                        system(("mkdir " + directory_name).c_str());
+
+                      }
+
+                    }
 
                   } else {
 

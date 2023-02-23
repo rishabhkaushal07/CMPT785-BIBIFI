@@ -177,10 +177,31 @@ bool is_valid_path(string &directory_name, const fs::path& root_path) {
 
           if (relative_path.has_parent_path()) {
 
-            // if the directory path is outside the root path
-            // Warn and return false
-            cerr << "Path is outside of the root directory. " << endl;
-            return false;
+            if (relative_path.string().find("..") != string::npos) {
+
+              // if the directory path is outside the root path
+              // Warn and return false
+              cerr << "Path is outside of the root directory." << endl;
+              return false;
+
+            } else {
+
+              // relative path is trying a subdirectory
+              if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
+
+                // if directory exists, then it's an okay path
+                return true;
+
+              } else {
+
+                // If a directory doesn't exist, the user should stay in the current directory
+                cerr << "Directory in the path does not exist." << endl;
+                cout << "Staying in current directory." << endl;
+                return false;
+
+              }
+
+            }
 
           } else {
 
