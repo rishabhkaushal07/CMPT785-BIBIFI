@@ -7,6 +7,7 @@
 #include <string>
 #include <unistd.h>
 #include <filesystem>
+#include <fstream>
 
 #include "user_type.h"
 
@@ -21,6 +22,21 @@ fs::path admin_root_path = fs::current_path();
 fs::path user_root_path = fs::current_path();
 
 fs::path root_path;
+
+// TODO: delete this function once the mkfile cmd starts to use encrypt
+void mkfile(std::string filename, std::string contents) {
+
+  ofstream file;
+  file.open(filename);
+  if (file.is_open()) {
+    file << contents;
+    cout << "Success: File created successfully!" << endl;
+    file.close();
+  } else {
+    cerr << "Error: Could not create file!" << endl;
+  }
+
+}
 
 // Here, we first check if the input string has more than one character.
 // If it does, we remove all consecutive / characters using the unique() algorithm from the algorithm header.
@@ -41,6 +57,199 @@ string normalize_path(std::string path) {
     path.erase(it, path.end());
   }
   return path;
+}
+
+
+bool is_valid_path(string &directory_name) {
+  directory_name = normalize_path(directory_name);
+
+  // construct a target (absolute) path from the directory name
+  fs::path current_path = fs::current_path();
+  fs::path target_path = fs::absolute(directory_name);
+  fs::path relative_path = fs::relative(target_path, root_path);
+  fs::path resolved_root = fs::absolute(root_path);
+  fs::path resolved_target = fs::absolute(target_path);
+
+
+  if (target_path.has_relative_path()) {
+
+    if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
+
+      // checking this before because lexically_relative errors if the dir doesn't exist
+      if(target_path.lexically_relative(root_path).native().front() == '.') {
+
+        if(directory_name == "." || directory_name == "..") {
+
+          if (directory_name == "/") {
+
+            // This should vary depending upon what kind of user is currently logged in
+            // cd / should take you to the current user’s root directory
+            // this is a valid directory so return true
+            return true;
+
+          } else if (target_path == root_path) {
+
+            if (current_path == root_path) {
+
+              // like `cd .`
+              // currently directory is a valid directory so return true
+              return true;
+
+            } else {
+
+              // like going to root path
+              // valid directory so return true
+              return true;
+
+            }
+
+          } else if (target_path == root_path.parent_path()) {
+
+            // like `cd ..`
+            // valid directory so return true
+            return true;
+
+          } else {
+
+            // if the directory path is outside the root path
+            // Warn and return false
+            cerr << "Path is outside of the root directory. " << endl;
+            return false;
+
+          }
+
+        } else {
+
+          if (target_path == root_path) {
+
+            if (current_path == root_path) {
+
+              // like `cd .`
+              // valid directory so return true
+              return true;
+
+            } else {
+
+              // going to the root path
+              // valid directory so return true
+              return true;
+
+            }
+
+          } else {
+
+            // if the directory path is outside the root path
+            // Warn and return false
+            cerr << "Path is outside of the root directory. " << endl;
+            return false;
+
+          }
+
+        }
+
+      } else {
+
+        if (directory_name == "/") {
+
+          // This should vary depending upon what kind of user is currently logged in
+          // like cd /
+          // valid directory so return true
+          return true;
+
+        } else if (target_path == root_path) {
+
+          if (current_path == root_path) {
+
+            // like `cd .`
+            // valid directory so return true
+            return true;
+
+          } else {
+
+            // like going to root path
+            // valid directory so return true
+            return true;
+
+          }
+
+        } else if (target_path == root_path.parent_path()) {
+
+          // like `cd ..`
+          // valid directory so return true
+          return true;
+
+        } else if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
+
+          if (relative_path.has_parent_path()) {
+
+            // if the directory path is outside the root path
+            // Warn and return false
+            cerr << "Path is outside of the root directory. " << endl;
+            return false;
+
+          } else {
+
+            if (relative_path.string().find("..") != std::string::npos) {
+
+              // relative_path contains .. meaning it is trying to go outside root directory
+              // if the directory path is outside the root path
+              // Warn and return false
+              cerr << "Path is outside of the root directory. " << endl;
+              return false;
+
+            } else {
+
+              // the directory exists
+              // valid directory so return true
+              return true;
+
+            }
+
+          }
+
+        } else {
+
+          // If a directory doesn't exist, the user should stay in the current directory
+          cerr << "Directory in the path does not exist." << endl;
+          cout << "Staying in current directory." << endl;
+          return false;
+
+        }
+
+      }
+
+    } else {
+
+      // If a directory doesn't exist, the user should stay in the current directory
+      cerr << "Directory in the path does not exist." << endl;
+      cout << "Staying in current directory." << endl;
+      return false ;
+
+    }
+
+  } else {
+
+    if (directory_name == "/"){
+
+      // This should vary depending upon what kind of user is currently logged in
+      // like cd /
+      // valid directory so return true
+      return true;
+
+    } else {
+
+      // if the directory path is outside the root path
+      // Warn and return false
+      cerr << "Path is outside of the root directory " << endl;
+      return false;
+
+    }
+
+  }
+
+  // return false in the end as a failsafe
+  return false;
+
 }
 
 int user_features(User_type user_type, string filesystem_path) {
@@ -484,8 +693,35 @@ int user_features(User_type user_type, string filesystem_path) {
       // TODO: should support multi-word and multi-line input
       istring_stream >> filename >> contents;
 
-      string cat = "echo " + contents + " > " + filename;
-      system(cat.c_str());
+
+
+      filesystem::path path_obj(filename);
+      string filename_str = path_obj.filename().string();
+      string parent_path_str = path_obj.parent_path().string();
+
+      // filename contains a path to the filename instead of just the filename
+      if (!parent_path_str.empty()) {
+
+        if (is_valid_path(parent_path_str)){
+
+            // TODO - replace the system call with encryption fn
+            // create file
+            cout << "try creating file.. " << endl;
+            mkfile(filename, contents);
+
+        }
+
+      } else if (!filename_str.empty()) {
+        cout << "The file name is: " << filename_str << std::endl;
+
+        // TODO - replace the system call with encryption fn
+        // create file
+        cout << "try creating file.. " << endl;
+        mkfile(filename, contents);
+
+      }
+
+
 
     } else if (cmd == "exit") {
 
