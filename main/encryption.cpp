@@ -24,10 +24,10 @@ void encrypt_file(string filePath, string content, unsigned char *key);
 string decrypt_file(string filePath, unsigned char *key);
 
 
-void handleErrors(void) {
-    ERR_print_errors_fp(stderr);
-    abort();
-}
+// void handleErrors(void) {
+//     ERR_print_errors_fp(stderr);
+//     abort();
+// }
 
 string RandomString(int ch){
     char letter[26] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g',
