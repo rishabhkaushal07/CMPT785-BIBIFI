@@ -72,24 +72,84 @@ int user_features(User_type user_type, string filesystem_path) {
       // get the directory name from istring stream buffer
       istring_stream >> directory_name;
 
-      directory_name = normalize_path(directory_name);
+      if(contains_backticks(directory_name)) {
+        cerr << "Error: directory name should not contain `backticks`, try again." << endl;
+      } else {
+        directory_name = normalize_path(directory_name);
 
-      // construct a target (absolute) path from the directory name
-      fs::path current_path = fs::current_path();
-      fs::path target_path = fs::absolute(directory_name);
-      fs::path relative_path = fs::relative(target_path, root_path);
-      fs::path resolved_root = fs::absolute(root_path);
-      fs::path resolved_target = fs::absolute(target_path);
+        // construct a target (absolute) path from the directory name
+        fs::path current_path = fs::current_path();
+        fs::path target_path = fs::absolute(directory_name);
+        fs::path relative_path = fs::relative(target_path, root_path);
+        fs::path resolved_root = fs::absolute(root_path);
+        fs::path resolved_target = fs::absolute(target_path);
 
 
-      if (target_path.has_relative_path()) {
+        if (target_path.has_relative_path()) {
 
-        if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
+          if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
 
-          // checking this before because lexically_relative errors if the dir doesn't exist
-          if(target_path.lexically_relative(root_path).native().front() == '.') {
+            // checking this before because lexically_relative errors if the dir doesn't exist
+            if(target_path.lexically_relative(root_path).native().front() == '.') {
 
-            if(directory_name == "." || directory_name == "..") {
+              if(directory_name == "." || directory_name == "..") {
+
+                if (directory_name == "/") {
+
+                  // This should vary depending upon what kind of user is currently logged in
+                  // cd / should take you to the current user’s root directory
+                  fs::current_path(root_path);
+                } else if (target_path == root_path) {
+
+                  if (current_path == root_path) {
+
+                    // like `cd .`  - so no need to change the directory
+                    fs::current_path(fs::current_path());
+                  } else {
+
+                    // go to root path
+                    fs::current_path(root_path);
+                  }
+
+                } else if (target_path == root_path.parent_path()) {
+
+                  // like `cd ..`
+                  fs::current_path(fs::current_path().parent_path());
+                } else {
+
+                  // if the directory path is outside the root path
+                  // Warn and stay in the current directory
+                  cerr << "Directory is outside of the root directory." << endl;
+                  cout << "Staying in current directory." << endl;
+
+                }
+
+              } else {
+
+                if (target_path == root_path) {
+
+                  if (current_path == root_path) {
+
+                    // like `cd .`  - so no need to change the directory
+                    fs::current_path(fs::current_path());
+                  } else {
+
+                    // go to root path
+                    fs::current_path(root_path);
+                  }
+
+                } else {
+
+                  // if the directory path is outside the root path
+                  // Warn and stay in the current directory
+                  cerr << "Directory is outside of the root directory." << endl;
+                  cout << "Staying in current directory." << endl;
+
+                }
+
+              }
+
+            } else {
 
               if (directory_name == "/") {
 
@@ -112,34 +172,57 @@ int user_features(User_type user_type, string filesystem_path) {
 
                 // like `cd ..`
                 fs::current_path(fs::current_path().parent_path());
-              } else {
+              } else if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
 
-                // if the directory path is outside the root path
-                // Warn and stay in the current directory
-                cerr << "Directory is outside of the root directory." << endl;
-                cout << "Staying in current directory." << endl;
+                if (relative_path.has_parent_path()) {
 
-              }
+                  if (relative_path.string().find("..") != string::npos) {
 
-            } else {
+                    // if the directory path is outside the root path
+                    // Warn and stay in the current directory
+                    cerr << "Directory is outside of the root directory." << endl;
+                    cout << "Staying in current directory." << endl;
 
-              if (target_path == root_path) {
+                  } else {
 
-                if (current_path == root_path) {
+                    // relative path is trying a subdirectory
+                    if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
 
-                  // like `cd .`  - so no need to change the directory
-                  fs::current_path(fs::current_path());
+                      // the directory exists, so we can change to given directory
+                      fs::current_path(target_path);
+
+                    } else {
+
+                      // If a directory doesn't exist, the user should stay in the current directory
+                      cerr << "Directory does not exist." << endl;
+                      cout << "Staying in current directory." << endl;
+
+                    }
+
+                  }
+
                 } else {
 
-                  // go to root path
-                  fs::current_path(root_path);
+                  if (relative_path.string().find("..") != std::string::npos) {
+
+                    // relative_path contains .. meaning it is trying to go outside root directory
+                    // if the directory path is outside the root path
+                    // Warn and stay in the current directory
+                    cerr << "Directory is outside of the root directory." << endl;
+                    cout << "Staying in current directory." << endl;
+
+                  } else {
+
+                    // the directory exists, so we can change to given directory
+                    fs::current_path(target_path);
+                  }
+
                 }
 
               } else {
 
-                // if the directory path is outside the root path
-                // Warn and stay in the current directory
-                cerr << "Directory is outside of the root directory." << endl;
+                // If a directory doesn't exist, the user should stay in the current directory
+                cerr << "Directory does not exist." << endl;
                 cout << "Staying in current directory." << endl;
 
               }
@@ -148,109 +231,32 @@ int user_features(User_type user_type, string filesystem_path) {
 
           } else {
 
-            if (directory_name == "/") {
-
-              // This should vary depending upon what kind of user is currently logged in
-              // cd / should take you to the current user’s root directory
-              fs::current_path(root_path);
-            } else if (target_path == root_path) {
-
-              if (current_path == root_path) {
-
-                // like `cd .`  - so no need to change the directory
-                fs::current_path(fs::current_path());
-              } else {
-
-                // go to root path
-                fs::current_path(root_path);
-              }
-
-            } else if (target_path == root_path.parent_path()) {
-
-              // like `cd ..`
-              fs::current_path(fs::current_path().parent_path());
-            } else if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
-
-              if (relative_path.has_parent_path()) {
-
-                if (relative_path.string().find("..") != string::npos) {
-
-                  // if the directory path is outside the root path
-                  // Warn and stay in the current directory
-                  cerr << "Directory is outside of the root directory." << endl;
-                  cout << "Staying in current directory." << endl;
-
-                } else {
-
-                  // relative path is trying a subdirectory
-                  if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
-
-                    // the directory exists, so we can change to given directory
-                    fs::current_path(target_path);
-
-                  } else {
-
-                    // If a directory doesn't exist, the user should stay in the current directory
-                    cerr << "Directory does not exist." << endl;
-                    cout << "Staying in current directory." << endl;
-
-                  }
-
-                }
-
-              } else {
-
-                if (relative_path.string().find("..") != std::string::npos) {
-
-                  // relative_path contains .. meaning it is trying to go outside root directory
-                  // if the directory path is outside the root path
-                  // Warn and stay in the current directory
-                  cerr << "Directory is outside of the root directory." << endl;
-                  cout << "Staying in current directory." << endl;
-
-                } else {
-
-                  // the directory exists, so we can change to given directory
-                  fs::current_path(target_path);
-                }
-
-              }
-
-            } else {
-
-              // If a directory doesn't exist, the user should stay in the current directory
-              cerr << "Directory does not exist." << endl;
-              cout << "Staying in current directory." << endl;
-
-            }
+            // If a directory doesn't exist, the user should stay in the current directory
+            cerr << "Directory does not exist." << endl;
+            cout << "Staying in current directory." << endl;
 
           }
 
         } else {
 
-          // If a directory doesn't exist, the user should stay in the current directory
-          cerr << "Directory does not exist." << endl;
-          cout << "Staying in current directory." << endl;
+          if (directory_name == "/"){
+
+            // This should vary depending upon what kind of user is currently logged in
+            // cd / should take you to the current user’s root directory
+            fs::current_path(root_path);
+          } else {
+
+            // if the directory path is outside the root path
+            // Warn and stay in the current directory
+            cerr << "Directory is outside of the root directory." << endl;
+            cout << "Staying in current directory." << endl;
+
+          }
 
         }
-
-      } else {
-
-        if (directory_name == "/"){
-
-          // This should vary depending upon what kind of user is currently logged in
-          // cd / should take you to the current user’s root directory
-          fs::current_path(root_path);
-        } else {
-
-          // if the directory path is outside the root path
-          // Warn and stay in the current directory
-          cerr << "Directory is outside of the root directory." << endl;
-          cout << "Staying in current directory." << endl;
-
-        }
-
       }
+
+
 
     } else if (cmd == "pwd") {
 
@@ -313,25 +319,29 @@ int user_features(User_type user_type, string filesystem_path) {
       // create a new directory
       istring_stream >> directory_name;
 
-      // construct a target (absolute) path from the directory name
-      fs::path current_path = fs::current_path();
-      fs::path target_path = fs::absolute(directory_name);
-      fs::path relative_path = fs::relative(target_path, root_path);
-      fs::path resolved_root = fs::absolute(root_path);
-      fs::path resolved_target = fs::absolute(target_path);
-
-      if (directory_name.empty()) {
-
-        cout << "directory_name not provided";
-
-      } else if (directory_name == "." || directory_name == "..") {
-
-        // . and .. directories always exist - try `ls -alh` to see all the dirs
-        cerr << "Directory already exists." << endl;
-
+      if(contains_backticks(directory_name)) {
+        cerr << "Error: directory name should not contain `backticks`, try again." << endl;
       } else {
 
-        if (target_path.has_relative_path()) {
+        // construct a target (absolute) path from the directory name
+        fs::path current_path = fs::current_path();
+        fs::path target_path = fs::absolute(directory_name);
+        fs::path relative_path = fs::relative(target_path, root_path);
+        fs::path resolved_root = fs::absolute(root_path);
+        fs::path resolved_target = fs::absolute(target_path);
+
+        if (directory_name.empty()) {
+
+            cout << "directory_name not provided";
+
+        } else if (directory_name == "." || directory_name == "..") {
+
+            // . and .. directories always exist - try `ls -alh` to see all the dirs
+            cerr << "Directory already exists." << endl;
+
+        } else {
+
+            if (target_path.has_relative_path()) {
 
             if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
 
@@ -491,26 +501,28 @@ int user_features(User_type user_type, string filesystem_path) {
 
             }
 
-        } else {
+            } else {
 
             if (directory_name == "/"){
 
-            // This should vary depending upon what kind of user is currently logged in
-            // mkdir /  means creating current user’s root directory
-            // but this should already exist so error out
-            cerr << "Directory already exists." << endl;
+              // This should vary depending upon what kind of user is currently logged in
+              // mkdir /  means creating current user’s root directory
+              // but this should already exist so error out
+              cerr << "Directory already exists." << endl;
 
             } else {
 
-            // if the directory path is outside the root path
-            // Warn and stay in the current directory
-            cerr << "Directory is outside of the root directory." << endl;
+              // if the directory path is outside the root path
+              // Warn and stay in the current directory
+              cerr << "Directory is outside of the root directory." << endl;
+
+            }
 
             }
 
         }
-
       }
+
 
     } else if (cmd == "mkfile") {
 
@@ -539,20 +551,28 @@ int user_features(User_type user_type, string filesystem_path) {
 
         if (is_valid_path(parent_path_str, root_path)){
 
-            // TODO - replace the system call with encryption fn
-            // create file
-            cout << "try creating file.. " << endl;
-            mkfile(filename, contents);
+            if(is_valid_filename(filename)) {
+              // TODO - replace the system call with encryption fn
+              // create file
+              cout << "try creating file.. " << endl;
+              mkfile(filename, contents);
+            } else {
+              cerr << "not a valid filename, try again" << endl;
+            }
 
         }
 
       } else if (!filename_str.empty()) {
         cout << "The file name is: " << filename_str << std::endl;
 
-        // TODO - replace the system call with encryption fn
-        // create file
-        cout << "try creating file.. " << endl;
-        mkfile(filename, contents);
+        if(is_valid_filename(filename)) {
+            // TODO - replace the system call with encryption fn
+            // create file
+            cout << "try creating file.. " << endl;
+            mkfile(filename, contents);
+        } else {
+            cerr << "not a valid filename, try again" << endl;
+        }
 
       }
 

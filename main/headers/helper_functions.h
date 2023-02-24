@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <filesystem>
 #include <fstream>
+#include <regex>
 
 #include "user_type.h"
 #include "user_features.h"
@@ -264,6 +265,34 @@ bool is_valid_path(string &directory_name, const fs::path& root_path) {
   }
 
   // return false in the end as a failsafe
+  return false;
+
+}
+
+bool contains_backticks(const string& input) {
+
+  if (input.find('`') != std::string::npos) {
+    // `backtick` found
+    return false;
+  }
+
+  // `backtick` not found
+  return true;
+}
+
+
+bool is_valid_filename(const string& filename) {
+
+  // reference: https://stackoverflow.com/questions/11794144/regular-expression-for-valid-filename
+  regex pattern("^[a-zA-Z0-9](?:[a-zA-Z0-9 ._-]*[a-zA-Z0-9])?\\.[a-zA-Z0-9_-]+$");
+
+  int max_length = 255;
+
+  // the filename matches pattern and is less than max_length, then return true
+  if((regex_match(filename, pattern)) && (filename.length() < max_length)) {
+    return true;
+  }
+
   return false;
 
 }
