@@ -105,6 +105,7 @@ string fetch_randomized_file_path(string filepath){
         i++;
     }
     // Output the last stored word.
+    temp = filename_encryption(s);
     randomized_path = randomized_path+ "/" + temp;
     return randomized_path;
 }
@@ -114,19 +115,20 @@ string fetch_plaintext_file_path(string randomized_filepath){
     int i = 0;
     string plaintext_path = "";
     // Temporary string used to split the string.
-    string s; 
+    string s,temp; 
     while (randomized_filepath[i] != '\0') {
         if (randomized_filepath[i] != separator) {
             // Append the char to the temp string.
             s += randomized_filepath[i]; 
         } else {
-            s = filename_decryption(s);
-            plaintext_path = plaintext_path + "/" + s;
+            temp = filename_decryption(s);
+            plaintext_path = plaintext_path + "/" + temp;
             s.clear();
         }
         i++;
     }
     // Output the last stored word.
+    temp = filename_decryption(s);
     plaintext_path = plaintext_path + "/" + s;
     return plaintext_path;
 }
