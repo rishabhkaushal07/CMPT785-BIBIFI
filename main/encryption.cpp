@@ -5,6 +5,9 @@
 #include <string.h>
 #include <iostream>
 #include <fstream>
+#include <cstdlib>
+#include <json\value.h>
+#include <json\json.h>
 using namespace std;
 
 const int BLOCK_SIZE = 16; //bytes
@@ -13,12 +16,94 @@ const int TAG_SIZE = 16; //bytes
 const int IV_SIZE = 16; //bytes
 
 void handleErrors(void);
+string RandomString(int ch);
+string find_filename(string randomized_name,FILE * file);
+string filename_encryption(string filename);
+string filename_decryption(string randomized_name);
 void encrypt_file(string filePath, string content, unsigned char *key);
 string decrypt_file(string filePath, unsigned char *key);
+
 
 void handleErrors(void) {
     ERR_print_errors_fp(stderr);
     abort();
+}
+
+string RandomString(int ch){
+    char letter[26] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g',
+                          'h', 'i', 'j', 'k', 'l', 'm', 'n',
+                          'o', 'p', 'q', 'r', 's', 't', 'u',
+                          'v', 'w', 'x', 'y', 'z' };
+    string random_str = "";
+    for (int i = 0; i<ch; i++)
+        random_str = random_str + letter[rand() % 26];
+    return random_str;
+}
+
+string find_filename(string randomized_name){
+    ifstream file;
+    Json::Reader reader;  
+    Json::Value mapping_value; 
+    Json::StyledStreamWriter writer; 
+ 
+    //opening file using fstream
+    ifstream file("metadata.json");
+ 
+    // check if there is any error is getting data from the json file
+    if (!reader.parse(file, mapping_value)) {
+        cout << reader.getFormattedErrorMessages();
+        exit(1);
+    }
+
+    //fetching randomizer-filepath mapping
+    string filename = mapping_value[random_str];
+
+    return filename;
+}
+
+string filename_encryption(string filename){
+    srand(time(NULL));
+    string random_str = RandomString(15);
+    Json::Reader reader;  
+    Json::Value newValue; 
+    Json::StyledStreamWriter writer; 
+    ofstream newFile;
+ 
+    //opening file using fstream
+    ifstream file("metadata.json");
+ 
+    // check if there is any error is getting data from the json file
+    if (!reader.parse(file, newValue)) {
+        cout << reader.getFormattedErrorMessages();
+        exit(1);
+    }
+
+    //adding randomizer-filepath mapping
+    newValue[random_str] = filename;
+
+    //add mapping to metadata file
+    newFile.open("metadata.json");
+    writer.write(newFile, newValue);
+    newFile.close();
+    // string file_content = filename + " " + random_str
+    // // map(filename, random_str)
+    // FILE * file = fopen("metadata.txt", "w+");
+    // if(file)
+    // {
+    //     fwrite(file_content.data(), sizeof(char), file_content.size(), file);
+    // }
+    // else
+    // {
+    //     cout<<"Unable to open the file\n";
+    //     return 0;
+    // }
+    return random_str;
+}
+
+string filename_decryption(string randomized_name){
+    string filename;
+    filename = find_filename(randomized_name);
+    return filename;
 }
 
 void encrypt_file(string filePath, string content, unsigned char *key) {
