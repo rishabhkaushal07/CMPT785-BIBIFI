@@ -97,7 +97,6 @@ string fetch_randomized_file_path(string filepath){
             s += filepath[i]; 
         } else {
             temp = filename_encryption(s);
-            cout << temp << "\n";
             randomized_path = randomized_path+ "/" + temp;
             s.clear();
         }
@@ -120,7 +119,7 @@ string fetch_plaintext_file_path(string randomized_filepath){
             // Append the char to the temp string.
             s += randomized_filepath[i]; 
         } else {
-            temp = filename_decryption(s);
+            temp = find_filename(s);
             plaintext_path = plaintext_path + "/" + temp;
             s.clear();
         }
@@ -282,8 +281,11 @@ string fetch_plaintext_file_path(string randomized_filepath){
 int main()
 {
     string filepath ="dir1/dir2/filename.txt";
+    filename_encryption("dir1");
+    filename_encryption("dir2");
+    filename_encryption("filename.txt");
     string output;
     output = fetch_randomized_file_path(filepath);
     cout<< output ;
-    cout << fetch_plaintext_file_path(output);
+    //cout << fetch_plaintext_file_path(output);
 }
