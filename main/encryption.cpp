@@ -60,7 +60,6 @@ string find_filename(string randomized_filename){
 
 string filename_encryption(string filename){
     srand(time(NULL));
-    
     //Generating the random string for filename
     string randomized_filename = Randomizer(15);
 
@@ -98,6 +97,7 @@ string fetch_randomized_file_path(string filepath){
             // Append the char to the temp string.
             s += filepath[i]; 
         } else {
+            cout << s <<"\n";
             temp = filename_encryption(s);
             randomized_path = randomized_path+ "/" + temp;
             s.clear();
