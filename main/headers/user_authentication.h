@@ -56,6 +56,7 @@ void add_user(const std::string& username, bool admin=false)
 
     std::cout << "User " << username << " added successfully." << std::endl;
     add_enc_key_to_metadata(username);
+    create_init_fs_for_user(username);
 }
 
 bool is_valid_keyfile(const string &username)

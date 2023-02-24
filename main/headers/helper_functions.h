@@ -291,6 +291,7 @@ uint8_t read_enc_key_from_metadata(string username){
     file.read((char*)key, KEY_SIZE);
     return *key;
 }
+
 bool contains_backticks(const string& input) {
 
   if (input.find('`') != std::string::npos) {
@@ -301,7 +302,6 @@ bool contains_backticks(const string& input) {
   // `backtick` not found
   return true;
 }
-
 
 bool is_valid_filename(const string& filename) {
 
@@ -319,5 +319,24 @@ bool is_valid_filename(const string& filename) {
 
 }
 
+void create_init_fs_for_user(string username) {
+  mode_t old_umask = umask(0); // to ensure the following modes get set
+  mode_t mode = 0700;
+  string u_folder = "filesystem/" + username;
+  if (mkdir(u_folder.c_str(), mode) != 0) {
+    std::cerr << "Error creating root folder for " << username << std::endl;
+  }
+  else {
+    u_folder = "filesystem/" + username + "/personal";
+    if (mkdir(u_folder.c_str(), mode) != 0) {
+      std::cerr << "Error creating personal folder for " << username << std::endl;
+    }
+    u_folder = "filesystem/" + username + "/shared";
+    if (mkdir(u_folder.c_str(), mode) != 0) {
+      std::cerr << "Error creating shared folder for " << username << std::endl;
+    }
+  }
+  umask(old_umask); // Restore the original umask value
+}
 
 #endif // CMPT785_BIBIFI_HELPER_FUNCTIONS_H

@@ -11,11 +11,10 @@ int main(int argc, char *argv[]) {
   // check for correct number arguments
   // ./fileserver counts as 1st argument, keyfile_name counts as 2nd argument
   struct stat sb;
-  mode_t mode = 0666;
+  mode_t mode = 0766;
   if(stat("filesystem", &sb) == 0) {
     if(argc != 2) {
-      cout << "System accepts 1 argument initially. Please enter "
-              "\"keyfile_name\" along with the program name"
+      cout << "Invalid keyfile"
           << endl;
       return 1;
     }
