@@ -14,8 +14,10 @@
 #include <openssl/rsa.h>
 #include <openssl/pem.h>
 #include <openssl/err.h>
+#include "helper_functions.h"
 
 using namespace std;
+
 void add_user(const std::string& username, const std::filesystem::path& public_key_dir, const std::filesystem::path& key_file_dir, bool admin = false) {
     if (admin) {
         // Generate admin SSH key pair
@@ -39,6 +41,7 @@ void add_user(const std::string& username, const std::filesystem::path& public_k
         std::filesystem::rename(admin_pri_key_file, key_file_dir / (admin_username + "_keyfile"));
 
         std::cout << "Admin key pair generated successfully." << std::endl;
+        add_enc_key_to_metadata(admin_username);
         return;
     }
     std::filesystem::path pub_key_file = public_key_dir / (username + ".pub");
@@ -59,18 +62,14 @@ void add_user(const std::string& username, const std::filesystem::path& public_k
     for (const auto& entry : std::filesystem::directory_iterator(public_key_dir)) {
         std::cout << entry.path() << '\n';
     }
-
     std::cout << "User " << username << " added successfully." << std::endl;
+    add_enc_key_to_metadata(username);
 }
 
 string get_type_of_user(const std::string &keyfile_name) {
 
   // First check if the keyfile is a valid file for or not
   //if (is_valid_keyfile(keyfile_name)) {
-
-    // After authenticating that the keyfile is valid and appropriate
-    // Decrypt the filesystem and,
-    decrypt_filesystem();
 
     // Return the type of the user based on the keyfile
     string username = keyfile_name;
@@ -124,8 +123,6 @@ cleanup:
         EVP_PKEY_free(pkey);
     }
     */
-    // before exiting encrypt the filesystem again
-    encrypt_filesystem();
     return result;
 }
 
