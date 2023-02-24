@@ -69,15 +69,15 @@ bool is_valid_keyfile(const string &username)
     
     // Extract the public key from the private key
     std::string command = "ssh-keygen -y -f " + private_key_path.string();
-    std::array<char, 128> buffer;
+    uint8_t buffer[128];
     std::string expected_public_key;
     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
     if (!pipe) {
         std::cerr << "Failed to run command: " << command << std::endl;
         return false;
     }
-    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
-        expected_public_key += buffer.data();
+    while (fgets((char*)buffer, 128, pipe.get()) != nullptr) {
+        expected_public_key.append((char*)buffer);
     }
     
     // Compare it to public key
