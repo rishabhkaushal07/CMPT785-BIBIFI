@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <fstream>
 #include <openssl/rand.h>
+#include <regex>
 
 #include "user_type.h"
 #include "user_features.h"
@@ -293,5 +294,33 @@ uint8_t* read_enc_key_from_metadata(string username){
     file.read((char*)key, KEY_SIZE);
     return key;
 }
+bool contains_backticks(const string& input) {
+
+  if (input.find('`') != std::string::npos) {
+    // `backtick` found
+    return false;
+  }
+
+  // `backtick` not found
+  return true;
+}
+
+
+bool is_valid_filename(const string& filename) {
+
+  // reference: https://stackoverflow.com/questions/11794144/regular-expression-for-valid-filename
+  regex pattern("^[a-zA-Z0-9](?:[a-zA-Z0-9 ._-]*[a-zA-Z0-9])?\\.[a-zA-Z0-9_-]+$");
+
+  int max_length = 255;
+
+  // the filename matches pattern and is less than max_length, then return true
+  if((regex_match(filename, pattern)) && (filename.length() < max_length)) {
+    return true;
+  }
+
+  return false;
+
+}
+
 
 #endif // CMPT785_BIBIFI_HELPER_FUNCTIONS_H
