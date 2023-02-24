@@ -8,7 +8,6 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-  add_user(admin,true);
   // check for correct number arguments
   // ./fileserver counts as 1st argument, keyfile_name counts as 2nd argument
   if (argc != 2) {
@@ -30,6 +29,7 @@ int main(int argc, char *argv[]) {
       mode_t mode = 0666;
       mode_t old_umask = umask(0); // to ensure the following modes get set
       if (stat("filesystem", &sb) != 0) {
+        add_user(admin,true);
         if (mkdir("filesystem", mode) != 0) {
           std::cerr << "Error creating filesystem." << std::endl;
           return 1;
