@@ -11,6 +11,7 @@
 
 #include "user_type.h"
 #include "helper_functions.h"
+#include "user_authentication.h"
 
 using namespace std;
 namespace fs = std::filesystem;
@@ -565,16 +566,8 @@ int user_features(string user_name, User_type user_type, uint8_t* key, string fi
       exit(EXIT_FAILURE);
 
     } else if ((cmd == "adduser") && (user_type == admin)) {
-
-      // TODO
-      /*
-     *
-     * `adduser <username>`
-     * This command should create a keyfile called username_keyfile
-     * on the host which will be used by the user to access the filesystem.
-     * If a user with this name already exists, print "User <username> already
-     * exists"
-       */
+        istring_stream >> filename;
+        add_user(filename);
 
     } else {
 

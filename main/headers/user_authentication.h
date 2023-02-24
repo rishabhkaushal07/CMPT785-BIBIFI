@@ -10,120 +10,101 @@
 #include <fstream>
 #include <string>
 #include <filesystem>
-#include <openssl/evp.h>
-#include <openssl/rsa.h>
-#include <openssl/pem.h>
-#include <openssl/err.h>
+#include <regex>
 #include "helper_functions.h"
 
 using namespace std;
-
-void add_user(const std::string& username, const std::filesystem::path& public_key_dir, const std::filesystem::path& key_file_dir, bool admin = false) {
-    if (admin) {
-        // Generate admin SSH key pair
-        std::string admin_username = "admin";
-        std::filesystem::path admin_pub_key_file = public_key_dir / (admin_username + ".pub");
-        std::filesystem::path admin_pri_key_file = key_file_dir / (admin_username + ".pri");
-
-        std::string admin_ssh_keygen_cmd = "ssh-keygen -t rsa -b 2048 -f " + admin_pri_key_file.string() + " -N '' -q";
-        system(admin_ssh_keygen_cmd.c_str());
-
-        // Move public key to public key directory
-        std::filesystem::path admin_pub_key_temp_file = admin_pri_key_file.parent_path() / (admin_username + ".pri.pub");
-        std::filesystem::rename(admin_pub_key_temp_file, admin_pub_key_file);
-        for (const auto& entry : std::filesystem::directory_iterator(key_file_dir)) {
-            std::cout << entry.path() << '\n';
+void add_user(const std::string& username, bool admin=false) {
+    // Check if admin creation, when filesystem first start admin=true, after that admin is not allowed as username
+    if(!admin){
+        if(username == "admin"){
+            std::cout << "Error: Invalid Username." << std::endl;
+        return;
         }
-        for (const auto& entry : std::filesystem::directory_iterator(public_key_dir)) {
-            std::cout << entry.path() << '\n';
-        }
-        // Move private key to keyfile directory
-        std::filesystem::rename(admin_pri_key_file, key_file_dir / (admin_username + "_keyfile"));
-
-        std::cout << "Admin key pair generated successfully." << std::endl;
-        add_enc_key_to_metadata(admin_username);
+    }
+    // Check if the username is super long
+    if (username.length() > 50) {
+        std::cout << "Error: Username is too long." << std::endl;
         return;
     }
-    std::filesystem::path pub_key_file = public_key_dir / (username + ".pub");
-    std::filesystem::path pri_key_file = key_file_dir / (username + ".pri");
+    
+    // Check that the username only contains letters, numbers, and underscores
+    std::regex username_regex("^[a-zA-Z0-9_]*$");
+    if (!std::regex_match(username, username_regex)) {
+        std::cout << "Error: Username contains invalid characters." << std::endl;
+        return;
+    }
+    // Check if the user already exist
+    if (std::filesystem::exists("public_keys/" + (username + ".pub")) || std::filesystem::exists("private_keys/" + (username + "_keyfile"))) {
+        std::cout << "User " << username << " already exists." << std::endl;
+        return;
+    }
+    
+    std::filesystem::path pri_key_file = "private_keys/" + username;
     // Generate SSH key pair
     std::string ssh_keygen_cmd = "ssh-keygen -t rsa -b 2048 -f " + pri_key_file.string() + " -N '' -q";
     system(ssh_keygen_cmd.c_str());
-
     // Move public key to public key directory
-    std::filesystem::path pub_key_temp_file = pri_key_file.parent_path() / (username + ".pri.pub");
-    std::filesystem::rename(pub_key_temp_file, pub_key_file);
+    std::filesystem::path temp_file = "private_keys/" + (username + ".pub");
+    std::filesystem::rename(temp_file, "public_keys/" + (username + ".pub"));
+    
+    // Rename private key
+    std::filesystem::rename("private_keys/" + username, ("private_keys/" + username +"_keyfile"));
 
-    // Move private key to keyfile directory
-    std::filesystem::rename(pri_key_file, key_file_dir / (username + "_keyfile"));
-    for (const auto& entry : std::filesystem::directory_iterator(key_file_dir)) {
-        std::cout << entry.path() << '\n';
-    }
-    for (const auto& entry : std::filesystem::directory_iterator(public_key_dir)) {
-        std::cout << entry.path() << '\n';
-    }
     std::cout << "User " << username << " added successfully." << std::endl;
     add_enc_key_to_metadata(username);
 }
 
-string get_type_of_user(const std::string &keyfile_name) {
-
-  // First check if the keyfile is a valid file for or not
-  //if (is_valid_keyfile(keyfile_name)) {
-
-    // Return the type of the user based on the keyfile
-    string username = keyfile_name;
-    if (username == "admin_keyfile") {
-      username = "admin";
-    } else {
-      username.erase(username.find_first_of("_ "));
+bool is_valid_keyfile(const string &username)
+{
+    string name = username;
+    // Check if the username is super long
+    if (username.length() > 50) {
+        std::cout << "Error: Keyfile name is too long." << std::endl;
+        return false;
     }
-    cout << "Logged in as " << username << endl;
-    return username;
-  }
-  /*
-  // Since the user wasn't authenticated, the login was failed and the program was exited.
-  cout << "Invalid keyfile" << endl;
-  // Before exiting encrypt the filesystem again
-  encrypt_filesystem();
-  exit(EXIT_FAILURE);
-  */
+    // Check that the username only contains letters, numbers, and underscores
+    std::regex username_regex("^[a-zA-Z0-9_]*$");
+    if (!std::regex_match(username, username_regex)) {
+        std::cout << "Error: Keyfile contains invalid characters." << std::endl;
+        return false;
+    }
+    
+    // Paths for private key and public key
+    std::filesystem::path private_key_path = "private_keys/" + name + "_keyfile";
+    std::filesystem::path public_key_path = "public_keys/" + name + ".pub";
+    
+    // Extract the public key from the private key
+    std::string command = "ssh-keygen -y -f " + private_key_path.string();
+    std::array<char, 128> buffer;
+    std::string expected_public_key;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
+    if (!pipe) {
+        std::cerr << "Failed to run command: " << command << std::endl;
+        return false;
+    }
+    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
+        expected_public_key += buffer.data();
+    }
+    
+    // Compare it to public key
+    std::ifstream public_key_file(public_key_path);
+    std::string public_key((std::istreambuf_iterator<char>(public_key_file)), std::istreambuf_iterator<char>());
+    public_key_file.close();
+
+    return expected_public_key == public_key;
 }
 
-// TODO: Implement authentication, currently it just checks that keyfile should not be empty
-/*
-bool is_valid_keyfile(const string &keyfile_name) {
-    EVP_PKEY* pkey = nullptr;
-    FILE* fp = nullptr;
-    bool result = false;
-
-    // Open the keyfile for reading
-    fp = fopen(keyfile_name.c_str(), "rb");
-    if (!fp) {
-        std::cerr << "Error opening keyfile: " << keyfile_name << std::endl;
-        goto cleanup;
+string get_type_of_user(const std::string &keyfile_name)
+{
+    string username = keyfile_name;
+    username.erase(username.find_first_of("_ "));
+    if (is_valid_keyfile(username)) {
+        cout << "Logged in as " << username << endl;
+        return username;
     }
-
-    // Read the public key from the keyfile
-    pkey = PEM_read_PUBKEY(fp, nullptr, nullptr, nullptr);
-    if (!pkey) {
-        std::cerr << "Error reading public key from keyfile: " << keyfile_name << std::endl;
-        goto cleanup;
-    }
-
-    // If we got this far, the keyfile is valid
-    result = true;
-
-cleanup:
-    // Clean up resources
-    if (fp) {
-        fclose(fp);
-    }
-    if (pkey) {
-        EVP_PKEY_free(pkey);
-    }
-    */
-    return result;
+    cout << "Invalid keyfile" << endl;
+    exit(EXIT_FAILURE);
 }
 
 #endif // CMPT785_BIBIFI_USER_AUTHENTICATION_H
