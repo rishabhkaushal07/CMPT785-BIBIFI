@@ -21,6 +21,8 @@ string Randomizer(int ch);
 string find_filename(string randomized_filename);
 string filename_encryption(string filename);
 string filename_decryption(string randomized_filename);
+string fetch_randomized_file_path(string filepath);
+string fetch_plaintext_file_path(string randomized_filepath);
 void encrypt_file(string filePath, string content, unsigned char *key);
 string decrypt_file(string filePath, unsigned char *key);
 
@@ -274,4 +276,13 @@ string decrypt_file(string filePath, unsigned char *key) {
     EVP_CIPHER_CTX_free(ctx);
     input_file.close();
     return ptoutput;
+}
+
+int main()
+{
+    string filepath ="dir1/dir2/filename.txt";
+    string output;
+    output = fetch_randomized_file_path(filepath);
+    cout<<output;
+    cout << fetch_plaintext_file_path(output);
 }
