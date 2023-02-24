@@ -6,8 +6,7 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
-#include <json\value.h>
-#include <json\json.h>
+#include "headers/json.h"
 using namespace std;
 
 const int BLOCK_SIZE = 16; //bytes
@@ -56,7 +55,7 @@ string find_filename(string randomized_name){
     }
 
     //fetching randomizer-filepath mapping
-    string filename = mapping_value[random_str];
+    string filename = mapping_value[randomized_name];
 
     return filename;
 }
@@ -85,18 +84,6 @@ string filename_encryption(string filename){
     newFile.open("metadata.json");
     writer.write(newFile, newValue);
     newFile.close();
-    // string file_content = filename + " " + random_str
-    // // map(filename, random_str)
-    // FILE * file = fopen("metadata.txt", "w+");
-    // if(file)
-    // {
-    //     fwrite(file_content.data(), sizeof(char), file_content.size(), file);
-    // }
-    // else
-    // {
-    //     cout<<"Unable to open the file\n";
-    //     return 0;
-    // }
     return random_str;
 }
 
@@ -251,4 +238,14 @@ string decrypt_file(string filePath, unsigned char *key) {
     EVP_CIPHER_CTX_free(ctx);
     input_file.close();
     return ptoutput;
+}
+
+int main()
+{
+    string test = "testfile";
+    string random_value = filename_encryption(test);
+    cout<<"Random Value:"<<random_value<<"\n";
+    string filename = filename_decryption(random_value);
+    cout<<"Filename: "<< filename <<" and the given filename: " << test;
+    return 1;
 }
