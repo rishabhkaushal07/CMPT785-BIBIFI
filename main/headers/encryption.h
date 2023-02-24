@@ -1,14 +1,13 @@
-//
-// Created by Rishabh Kaushal on 2023-01-29.
-//
-
 #ifndef CMPT785_BIBIFI_ENCRYPTION_H
 #define CMPT785_BIBIFI_ENCRYPTION_H
 
-// TODO: encrypt the filesystem
-void encrypt_filesystem() {}
+const int BLOCK_SIZE = 16; //bytes
+const int KEY_SIZE = 32; //bytes
+const int TAG_SIZE = 16; //bytes
+const int IV_SIZE = 16; //bytes
 
-// TODO: decrypt the filesystem
-void decrypt_filesystem() {}
+void handleErrors(void);
+void encrypt_file(string filePath, string content, unsigned char *key);
+string decrypt_file(string filePath, unsigned char *key);
 
 #endif // CMPT785_BIBIFI_ENCRYPTION_H
