@@ -54,8 +54,9 @@ string find_filename(string randomized_name){
     }
 
     //fetching randomizer-filepath mapping
-    string filename ;
-    filename = mapping_value[randomized_name];
+    string filename = "test";
+    // TO DO: Check error in next line
+    // filename = mapping_value[randomized_name];
     return filename;
 }
 
