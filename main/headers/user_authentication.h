@@ -11,6 +11,7 @@
 #include <string>
 #include <filesystem>
 #include <regex>
+#include "helper_functions.h"
 
 using namespace std;
 void add_user(const std::string& username, bool admin=false) {
@@ -51,6 +52,7 @@ void add_user(const std::string& username, bool admin=false) {
     std::filesystem::rename("private_keys/" + username, ("private_keys/" + username +"_keyfile"));
 
     std::cout << "User " << username << " added successfully." << std::endl;
+    add_enc_key_to_metadata(username);
 }
 
 bool is_valid_keyfile(const string &username)
