@@ -13,34 +13,12 @@ const int TAG_SIZE = 16; //bytes
 const int IV_SIZE = 16; //bytes
 
 void handleErrors(void);
-string RandomString(int ch);
-string filename_encryption(string filename);
 void encrypt_file(string filePath, string content, unsigned char *key);
 string decrypt_file(string filePath, unsigned char *key);
 
 void handleErrors(void) {
     ERR_print_errors_fp(stderr);
     abort();
-}
-
-string RandomString(int ch)
-{
-    char letter[26] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-                          'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                          'o', 'p', 'q', 'r', 's', 't', 'u',
-                          'v', 'w', 'x', 'y', 'z' };
-    string random_str = "";
-    for (int i = 0; i<ch; i++)
-        random_str = random_str + letter[rand() % 26];
-
-    return random_str;
-}
-
-string filename_encryption(string filename){
-   srand(time(NULL));
-   string random_str = RandomString(15);
-   // map(filename, random_str)
-   return random_str;
 }
 
 void encrypt_file(string filePath, string content, unsigned char *key) {
@@ -51,7 +29,9 @@ void encrypt_file(string filePath, string content, unsigned char *key) {
     unsigned char tag[TAG_SIZE];
 
     // Generate the output file path.
-    string output_filepath = filename_encryption(filePath);
+    // ToDo: invoke the filename_encryption function to get the randomized filepath 
+    // string output_filepath = filename_encryption(filePath);
+    string output_filepath = filePath;
 
     // Open the output file for writing.
     ofstream output_file(output_filepath);
@@ -126,7 +106,9 @@ void encrypt_file(string filePath, string content, unsigned char *key) {
 string decrypt_file(string filePath, unsigned char *key) {
     string ptoutput = "";
     // Open the input file for reading.
-    ifstream input_file(filename_decryption(filePath));
+    // ToDo: Invoke the filename_decryption function to get the mapping of the plaintext filename
+    // ifstream input_file(filename_decryption(filePath));
+    ifstream input_file(filePath);
     if (!input_file) {
         throw ios_base::failure("Failed to open file: " + filePath);
     }
