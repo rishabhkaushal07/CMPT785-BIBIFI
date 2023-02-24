@@ -86,10 +86,10 @@ string fetch_plaintext_file_path(string randomized_filepath){
     string plaintext_path = "";
     // Temporary string used to split the string.
     string s; 
-    while (filepath[i] != '\0') {
-        if (filepath[i] != separator) {
+    while (randomized_filepath[i] != '\0') {
+        if (randomized_filepath[i] != separator) {
             // Append the char to the temp string.
-            s += filepath[i]; 
+            s += randomized_filepath[i]; 
         } else {
             s = filename_decryption(s);
             plaintext_path = plaintext_path + "/" + s;
