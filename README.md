@@ -70,3 +70,12 @@ for the new shell will be "/", with personal and shared directories available fo
 ## Local Linting
 
     `docker run -e RUN_LOCAL=true -v $PWD:/tmp/lint github/super-linter`
+
+## Testing
+
+    A simple Dockerfile is added to test the programs in Linux environment. 
+    1. Copy your ssh key as 'id_rsa' in the local path. (It did not work from ~/.ssh/ for me)
+    2. Build the Dockerfile using `build-docker` make target.
+    3. Run the docker container using `run-docker` make target.
+    4. Clone the git repository - `git clone git@github.com:rishabhkaushal07/CMPT785-BIBIFI.git`
+    5. Make sure to add '-lssl -lcrypto' flags when compiling the code.
