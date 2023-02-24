@@ -66,33 +66,33 @@ void add_user(const std::string& username, const std::filesystem::path& public_k
 string get_type_of_user(const std::string &keyfile_name) {
 
   // First check if the keyfile is a valid file for or not
-  if (is_valid_keyfile(keyfile_name)) {
+  //if (is_valid_keyfile(keyfile_name)) {
 
     // After authenticating that the keyfile is valid and appropriate
     // Decrypt the filesystem and,
     decrypt_filesystem();
 
     // Return the type of the user based on the keyfile
-    string username;
-    if (keyfile_name == "admin_keyfile_name") {
+    string username = keyfile_name;
+    if (username == "admin_keyfile") {
       username = "admin";
     } else {
-      username = "user";
+      username.erase(username.find_first_of("_ "));
     }
-
     cout << "Logged in as " << username << endl;
     return username;
   }
-
+  /*
   // Since the user wasn't authenticated, the login was failed and the program was exited.
   cout << "Invalid keyfile" << endl;
   // Before exiting encrypt the filesystem again
   encrypt_filesystem();
   exit(EXIT_FAILURE);
+  */
 }
 
 // TODO: Implement authentication, currently it just checks that keyfile should not be empty
-
+/*
 bool is_valid_keyfile(const string &keyfile_name) {
     EVP_PKEY* pkey = nullptr;
     FILE* fp = nullptr;
@@ -123,6 +123,7 @@ cleanup:
     if (pkey) {
         EVP_PKEY_free(pkey);
     }
+    */
     // before exiting encrypt the filesystem again
     encrypt_filesystem();
     return result;
