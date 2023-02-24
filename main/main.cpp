@@ -8,7 +8,7 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-
+  add_user(admin,true);
   // check for correct number arguments
   // ./fileserver counts as 1st argument, keyfile_name counts as 2nd argument
   if (argc != 2) {
@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
             "\"keyfile_name\" along with the program name"
          << endl;
   } else {
-
+    
     string keyfile_name = argv[1];
 
     string filesystem_path = fs::current_path();
