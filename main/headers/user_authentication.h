@@ -5,115 +5,128 @@
 
 #include "encryption.h"
 #include <string>
-
-#include "user_type.h"
-
-/*
-#include <openssl/sha.h>
 #include <random>
- */
+#include <iostream>
+#include <fstream>
+#include <string>
+#include <filesystem>
+#include <openssl/evp.h>
+#include <openssl/rsa.h>
+#include <openssl/pem.h>
+#include <openssl/err.h>
 
 using namespace std;
+void add_user(const std::string& username, const std::filesystem::path& public_key_dir, const std::filesystem::path& key_file_dir, bool admin = false) {
+    if (admin) {
+        // Generate admin SSH key pair
+        std::string admin_username = "admin";
+        std::filesystem::path admin_pub_key_file = public_key_dir / (admin_username + ".pub");
+        std::filesystem::path admin_pri_key_file = key_file_dir / (admin_username + ".pri");
 
-/*
-void create_admin_keyfile(std::string keyfile_name) {
-  std::fstream keyfile(keyfile_name, std::ios::out | std::ios::binary);
-  if (!keyfile.is_open()) {
-    std::cerr << "Error opening keyfile." << std::endl;
-    return;
-  }
+        std::string admin_ssh_keygen_cmd = "ssh-keygen -t rsa -b 2048 -f " + admin_pri_key_file.string() + " -N '' -q";
+        system(admin_ssh_keygen_cmd.c_str());
 
-  std::random_device rd;
-  std::uniform_int_distribution<int> dist(0, 255);
-  std::string key;
-  for (int i = 0; i < 32; i++) {
-    key += dist(rd);
-  }
+        // Move public key to public key directory
+        std::filesystem::path admin_pub_key_temp_file = admin_pri_key_file.parent_path() / (admin_username + ".pri.pub");
+        std::filesystem::rename(admin_pub_key_temp_file, admin_pub_key_file);
+        for (const auto& entry : std::filesystem::directory_iterator(key_file_dir)) {
+            std::cout << entry.path() << '\n';
+        }
+        for (const auto& entry : std::filesystem::directory_iterator(public_key_dir)) {
+            std::cout << entry.path() << '\n';
+        }
+        // Move private key to keyfile directory
+        std::filesystem::rename(admin_pri_key_file, key_file_dir / (admin_username + "_keyfile"));
 
-  // encrypt the key using a suitable algorithm
-  // ...
+        std::cout << "Admin key pair generated successfully." << std::endl;
+        return;
+    }
+    std::filesystem::path pub_key_file = public_key_dir / (username + ".pub");
+    std::filesystem::path pri_key_file = key_file_dir / (username + ".pri");
+    // Generate SSH key pair
+    std::string ssh_keygen_cmd = "ssh-keygen -t rsa -b 2048 -f " + pri_key_file.string() + " -N '' -q";
+    system(ssh_keygen_cmd.c_str());
 
-  keyfile.write(key.c_str(), key.length());
-  keyfile.close();
-}
+    // Move public key to public key directory
+    std::filesystem::path pub_key_temp_file = pri_key_file.parent_path() / (username + ".pri.pub");
+    std::filesystem::rename(pub_key_temp_file, pub_key_file);
 
- */
-
-/* In main maybe add:
-  std::string keyfileName = "admin_keyfile";
-  create_admin_keyfile(keyfileName);
-  return 0;
-*/
-
-
-
-bool is_valid_keyfile(const string &keyfile_name);
-
-/*
-std::ifstream keyfile(keyfile_name);
-if (!keyfile) {
-  std::cerr << "Error opening keyfile: " << keyfile_name << std::endl;
-  return false;
-}
-std::string keyfile_contents((std::istreambuf_iterator<char>(keyfile)),
-                             std::istreambuf_iterator<char>());
-unsigned char hash[SHA256_DIGEST_LENGTH];
-SHA256_CTX sha256;
-SHA256_Init(&sha256);
-SHA256_Update(&sha256, keyfile_contents.c_str(), keyfile_contents.length());
-SHA256_Final(hash, &sha256);
-std::string computed_hash = std::string((char *)hash, SHA256_DIGEST_LENGTH);
-// Compare computed_hash with expected_hash
-if (computed_hash == expected_hash) {
-  return true;
-} else {
-  return false;
-}
-# Note: This is just a sample code for validation and does not include the actual expected hash value, which should be stored securely in a separate location.
-*/
-
-User_type get_type_of_user(const std::string &keyfile_name) {
-
-  // TODO: first check if the keyfile is a valid file for or not
-  if (is_valid_keyfile(keyfile_name)) {
-
-    // after authenticating that the keyfile is valid and appropriate
-    // TODO: Decrypt the filesystem and,
-    decrypt_filesystem();
-
-    // TODO: return the type of the user based on the keyfile
-    string username;
-    User_type user_type;
-    if (keyfile_name == "admin_keyfile_name") {
-      username = "admin";
-      user_type = admin;
-    } else {
-      username = "user";
-      user_type = user;
+    // Move private key to keyfile directory
+    std::filesystem::rename(pri_key_file, key_file_dir / (username + "_keyfile"));
+    for (const auto& entry : std::filesystem::directory_iterator(key_file_dir)) {
+        std::cout << entry.path() << '\n';
+    }
+    for (const auto& entry : std::filesystem::directory_iterator(public_key_dir)) {
+        std::cout << entry.path() << '\n';
     }
 
-    cout << "Logged in as " << username << endl;
-    return user_type;
-  }
-
-  // Since the user wasn't authenticated, the login was failed and the program
-  // was exited.
-  cout << "Invalid keyfile" << endl;
-  // before exiting encrypt the filesystem again
-  encrypt_filesystem();
-  exit(EXIT_FAILURE);
+    std::cout << "User " << username << " added successfully." << std::endl;
 }
 
-// TODO: Implement authentication, currently it just checks that keyfile should
-// not be empty
-bool is_valid_keyfile(const string &keyfile_name) {
-  if (!keyfile_name.empty()) {
-    return true;
-  }
+string get_type_of_user(const std::string &keyfile_name) {
 
-  // before exiting encrypt the filesystem again
+  // First check if the keyfile is a valid file for or not
+  //if (is_valid_keyfile(keyfile_name)) {
+
+    // After authenticating that the keyfile is valid and appropriate
+    // Decrypt the filesystem and,
+    decrypt_filesystem();
+
+    // Return the type of the user based on the keyfile
+    string username = keyfile_name;
+    if (username == "admin_keyfile") {
+      username = "admin";
+    } else {
+      username.erase(username.find_first_of("_ "));
+    }
+    cout << "Logged in as " << username << endl;
+    return username;
+  }
+  /*
+  // Since the user wasn't authenticated, the login was failed and the program was exited.
+  cout << "Invalid keyfile" << endl;
+  // Before exiting encrypt the filesystem again
   encrypt_filesystem();
-  return false;
+  exit(EXIT_FAILURE);
+  */
+}
+
+// TODO: Implement authentication, currently it just checks that keyfile should not be empty
+/*
+bool is_valid_keyfile(const string &keyfile_name) {
+    EVP_PKEY* pkey = nullptr;
+    FILE* fp = nullptr;
+    bool result = false;
+
+    // Open the keyfile for reading
+    fp = fopen(keyfile_name.c_str(), "rb");
+    if (!fp) {
+        std::cerr << "Error opening keyfile: " << keyfile_name << std::endl;
+        goto cleanup;
+    }
+
+    // Read the public key from the keyfile
+    pkey = PEM_read_PUBKEY(fp, nullptr, nullptr, nullptr);
+    if (!pkey) {
+        std::cerr << "Error reading public key from keyfile: " << keyfile_name << std::endl;
+        goto cleanup;
+    }
+
+    // If we got this far, the keyfile is valid
+    result = true;
+
+cleanup:
+    // Clean up resources
+    if (fp) {
+        fclose(fp);
+    }
+    if (pkey) {
+        EVP_PKEY_free(pkey);
+    }
+    */
+    // before exiting encrypt the filesystem again
+    encrypt_filesystem();
+    return result;
 }
 
 #endif // CMPT785_BIBIFI_USER_AUTHENTICATION_H
