@@ -6,8 +6,9 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
-#include "headers/json.h"
+#include "headers/json.hpp"
 using namespace std;
+using json = nlohmann::json;
 
 const int BLOCK_SIZE = 16; //bytes
 const int KEY_SIZE = 32; //bytes
@@ -40,50 +41,28 @@ string RandomString(int ch){
 }
 
 string find_filename(string randomized_name){
-    Json::Reader reader;  
-    Json::Value mapping_value; 
-    Json::StyledStreamWriter writer; 
- 
     //opening file using fstream
-    ifstream file("metadata.json");
- 
-    // check if there is any error is getting data from the json file
-    if (!reader.parse(file, mapping_value)) {
-        cout << reader.getFormattedErrorMessages();
-        exit(1);
-    }
+    std::ifstream f("metadata.json");
+    json data = json::parse(f);
 
     //fetching randomizer-filepath mapping
-    string filename = "test";
-    // TO DO: Check error in next line
-    // filename = mapping_value[randomized_name];
+    string filename = data.value(randomized_name, "not found");
+
+    if(strcmp(filename, "not found") == 0)
+        handleErrors()
     return filename;
 }
 
 string filename_encryption(string filename){
     srand(time(NULL));
     string random_str = RandomString(15);
-    Json::Reader reader;  
-    Json::Value newValue; 
-    Json::StyledStreamWriter writer; 
-    ofstream newFile;
- 
-    //opening file using fstream
-    ifstream file("metadata.json");
- 
-    // check if there is any error is getting data from the json file
-    if (!reader.parse(file, newValue)) {
-        cout << reader.getFormattedErrorMessages();
-        exit(1);
-    }
-
-    //adding randomizer-filepath mapping
-    newValue[random_str] = filename;
-
-    //add mapping to metadata file
-    newFile.open("metadata.json");
-    writer.write(newFile, newValue);
-    newFile.close();
+    std::ifstream f("metadata.json");
+    json jsonfile = json::parse(f);
+    json insertVal = json::object();
+    insertVal[random_str] = filename;
+    jsonfile.update(insertVal.begin(), insertVal.end(), true);
+    std::ofstream file("metadata.json");
+    file << jsonfile;
     return random_str;
 }
 
