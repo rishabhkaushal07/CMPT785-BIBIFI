@@ -291,9 +291,11 @@ uint8_t read_enc_key_from_metadata(string username){
     file.read((char*)key, KEY_SIZE);
     return *key;
 }
+
 bool contains_backticks(const string& input) {
 
-  if (input.find('`') != std::string::npos) {
+  cout << input<<endl;
+  if (input.find('`') == std::string::npos) {
     // `backtick` found
     return false;
   }
@@ -301,7 +303,6 @@ bool contains_backticks(const string& input) {
   // `backtick` not found
   return true;
 }
-
 
 bool is_valid_filename(const string& filename) {
 

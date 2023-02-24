@@ -60,7 +60,7 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
   do {
 
     // TODO: Replace "user_name" with actual user_name
-    cout << "user_name" << " " << custom_pwd(filesystem_path) << "> ";
+    cout << user_name << " " << custom_pwd(filesystem_path) << "> ";
     // get command from the user
     getline(std::cin, input_feature);
 

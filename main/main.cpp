@@ -8,11 +8,12 @@
 using namespace std;
 
 int main(int argc, char *argv[]) {
-  // check for correct number arguments
-  // ./fileserver counts as 1st argument, keyfile_name counts as 2nd argument
+  string filesystem_path = fs::current_path();
   struct stat sb;
-  mode_t mode = 0666;
+  mode_t mode = 0766;
   if(stat("filesystem", &sb) == 0) {
+    // check for correct number arguments
+    // ./fileserver counts as 1st argument, keyfile_name counts as 2nd argument
     if(argc != 2) {
       cout << "System accepts 1 argument initially. Please enter "
               "\"keyfile_name\" along with the program name"
@@ -21,7 +22,6 @@ int main(int argc, char *argv[]) {
     }
     else{
       string keyfile_name = argv[1];
-      string filesystem_path = fs::current_path();
       // user authenticated, allow "available commands" to be run
       string user_name = get_type_of_user(keyfile_name);
       User_type user_type;
@@ -54,6 +54,9 @@ int main(int argc, char *argv[]) {
       return 1;
     }
     umask(old_umask); // Restore the original umask value
-    add_user("admin",true);
+    string user_name = "admin";
+    add_user(user_name,true);
+    uint8_t key = read_enc_key_from_metadata(user_name);
+    user_features(user_name, admin, key, filesystem_path);
   }
 }
