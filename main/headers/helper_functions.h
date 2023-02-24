@@ -282,14 +282,14 @@ void add_enc_key_to_metadata(string username){
     file.close();
 }
 
-uint8_t* read_enc_key_from_metadata(string username){
+uint8_t read_enc_key_from_metadata(string username){
     fstream file("metadata/" + username + "_key", ios::in | ios::binary);
     if (!file.is_open()) {
       std::cout << "Failed to read key from metadata" << std::endl;
     }
     uint8_t key[KEY_SIZE];
     file.read((char*)key, KEY_SIZE);
-    return key;
+    return *key;
 }
 bool contains_backticks(const string& input) {
 
