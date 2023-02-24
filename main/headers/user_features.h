@@ -24,6 +24,11 @@ fs::path user_root_path = fs::current_path();
 
 fs::path root_path;
 
+string custom_pwd(string &filesystem_path) {
+  string pwd = fs::current_path();
+  pwd = pwd.erase(1, filesystem_path.length());
+  return pwd;
+}
 
 int user_features(User_type user_type, string filesystem_path) {
 
@@ -52,6 +57,9 @@ int user_features(User_type user_type, string filesystem_path) {
   string input_feature, cmd, filename, username, directory_name, contents;
 
   do {
+
+    // TODO: Replace "user_name" with actual user_name
+    cout << "user_name" << " " << custom_pwd(filesystem_path) << "> ";
     // get command from the user
     getline(std::cin, input_feature);
 
@@ -246,8 +254,7 @@ int user_features(User_type user_type, string filesystem_path) {
 
     } else if (cmd == "pwd") {
 
-      string pwd = fs::current_path();
-      pwd.erase(0, filesystem_path.length());
+      string pwd = custom_pwd(filesystem_path);
       cout << pwd << endl;
 
     } else if (cmd == "ls") {
