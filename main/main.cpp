@@ -1,4 +1,5 @@
 #include <iostream>
+#include <sys/stat.h>
 
 #include "headers/user_type.h"
 #include "headers/user_authentication.h"
@@ -23,6 +24,16 @@ int main(int argc, char *argv[]) {
     // TODO: check for user authentication
     User_type user_type = get_type_of_user(keyfile_name);
     if (user_type == admin || user_type == user) {
+
+      // Create a filesystem, public_keys and private_keys directory, if none exists.
+      struct stat sb;
+      if (stat("filesystem", &sb) != 0)
+        mkdir("filesystem",0660);
+      if (stat("public_keys", &sb) != 0)
+        mkdir("public_keys",0660);
+      if (stat("private_keys", &sb) != 0)
+        mkdir("private_keys",0660);
+
       // user authenticated, allow "available commands" to be run
       user_features(user_type, filesystem_path);
     } else {
