@@ -8,12 +8,14 @@
 #include <unistd.h>
 #include <filesystem>
 #include <fstream>
+#include <openssl/rand.h>
 
 #include "user_type.h"
 #include "user_features.h"
 
 using namespace std;
 namespace fs = std::filesystem;
+const int KEY_SIZE = 32; //bytes
 
 // TODO: once the filesystem directory and logic is created,
 // TODO: use correct admin_root_path and user_root_path
@@ -268,5 +270,28 @@ bool is_valid_path(string &directory_name, const fs::path& root_path) {
 
 }
 
+void add_enc_key_to_metadata(string username){
+    // create metadata key file if not present
+    fstream file("metadata/" + username + "_key", ios::out | ios::binary);
+    if (!file.is_open()) {
+        std::cout << "Failed to create user metadata key file" << std::endl;
+        return;
+    }
+    // create 256-bit key 
+    uint8_t key[KEY_SIZE];
+    RAND_bytes(key, KEY_SIZE);
+    file.write((char*)key, KEY_SIZE);
+    file.close();
+}
+
+uint8_t* read_enc_key_from_metadata(string username){
+    fstream file("metadata/" + username + "_key", ios::in | ios::binary);
+    if (!file.is_open()) {
+      std::cout << "Failed to read key from metadata" << std::endl;
+    }
+    uint8_t key[KEY_SIZE];
+    file.read((char*)key, KEY_SIZE);
+    return key;
+}
 
 #endif // CMPT785_BIBIFI_HELPER_FUNCTIONS_H
