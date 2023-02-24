@@ -284,6 +284,6 @@ int main()
     string filepath ="dir1/dir2/filename.txt";
     string output;
     output = fetch_randomized_file_path(filepath);
-    cout<< output <<"\n";
+    cout<< output ;
     cout << fetch_plaintext_file_path(output);
 }
