@@ -56,6 +56,18 @@ void add_user(const std::string& username, bool admin=false) {
 bool is_valid_keyfile(const string &username)
 {
     string name = username;
+    // Check if the username is super long
+    if (username.length() > 50) {
+        std::cout << "Error: Keyfile name is too long." << std::endl;
+        return false;
+    }
+    // Check that the username only contains letters, numbers, and underscores
+    std::regex username_regex("^[a-zA-Z0-9_]*$");
+    if (!std::regex_match(username, username_regex)) {
+        std::cout << "Error: Keyfile contains invalid characters." << std::endl;
+        return false;
+    }
+    
     // Paths for private key and public key
     std::filesystem::path private_key_path = "private_keys/" + name + "_keyfile";
     std::filesystem::path public_key_path = "public_keys/" + name + ".pub";
