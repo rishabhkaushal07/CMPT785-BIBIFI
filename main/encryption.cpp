@@ -62,7 +62,6 @@ string filename_encryption(string filename){
     srand(time(NULL));
     //Generating the random string for filename
     string randomized_filename = Randomizer(10);
-    cout << randomized_filename << "\n";
     //Reading the metadata JSON for inserting the randomizer-filename mapping
     std::ifstream metadata_file("metadata.json");
     json metadata_json = json::parse(metadata_file);
@@ -98,6 +97,7 @@ string fetch_randomized_file_path(string filepath){
             s += filepath[i]; 
         } else {
             temp = filename_encryption(s);
+            cout << temp << "\n";
             randomized_path = randomized_path+ "/" + temp;
             s.clear();
         }
