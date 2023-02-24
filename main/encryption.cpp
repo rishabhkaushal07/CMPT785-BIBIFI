@@ -44,7 +44,7 @@ string Randomizer(int ch){
     return random_string;
 }
 
-string find_filename(string  username, string randomized_filename){
+string find_filename(string randomized_filename){
     //opening file using fstream
     std::ifstream metadata_file("metadata.json");
     json metadata_json = json::parse(metadata_file);
