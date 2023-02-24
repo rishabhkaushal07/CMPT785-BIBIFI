@@ -64,6 +64,12 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
     // get command from the user
     getline(std::cin, input_feature);
 
+    if (cin.eof()) {
+        // Ctrl+D was pressed
+        std::cout << "EOF detected." << std::endl;
+        return 1;
+    }
+
     // get the first word (command) from the input
     istringstream istring_stream(input_feature);
     istring_stream >> cmd;
@@ -256,8 +262,6 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
 
         }
       }
-
-
 
     } else if (cmd == "pwd") {
 
