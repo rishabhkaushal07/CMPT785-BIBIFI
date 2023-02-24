@@ -294,9 +294,6 @@ int user_features(string user_name, User_type user_type, uint8_t* key, string fi
       istring_stream >> filename;
       if (filename.empty()) {
         cout << "filename not provided";
-
-        // before exiting encrypt the filesystem again
-        encrypt_filesystem();
       } else {
         system(("cat " + filename).c_str());
       }
@@ -580,10 +577,7 @@ int user_features(string user_name, User_type user_type, uint8_t* key, string fi
 
 
     } else if (cmd == "exit") {
-
-      // before exiting encrypt the filesystem again
-      encrypt_filesystem();
-      exit(EXIT_FAILURE);
+      exit(EXIT_SUCCESS);
 
     } else if ((cmd == "adduser") && (user_type == admin)) {
         istring_stream >> filename;
@@ -600,8 +594,6 @@ int user_features(string user_name, User_type user_type, uint8_t* key, string fi
 
   } while (cmd != "exit"); // only exit out of command line when using "exit" cmd
 
-  // before exiting encrypt the filesystem again
-  encrypt_filesystem();
   return 1;
 }
 

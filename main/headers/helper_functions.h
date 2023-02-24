@@ -11,9 +11,6 @@
 #include <openssl/rand.h>
 #include <regex>
 
-#include "user_type.h"
-#include "user_features.h"
-
 using namespace std;
 namespace fs = std::filesystem;
 const int KEY_SIZE = 32; //bytes

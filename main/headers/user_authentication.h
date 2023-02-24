@@ -3,7 +3,7 @@
 #ifndef CMPT785_BIBIFI_USER_AUTHENTICATION_H
 #define CMPT785_BIBIFI_USER_AUTHENTICATION_H
 
-#include "helper_function.h"
+#include "helper_functions.h"
 #include "encryption.h"
 #include <string>
 #include <random>
