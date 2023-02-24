@@ -5,7 +5,7 @@ using namespace std;
 using json = nlohmann::json;
 int main()
 {
-std::ifstream f("data.json");
+std::ifstream f("metadata.json");
 json data = json::parse(f);
 // Access the values existing in JSON data
 string name = data.value("test", "not found");
