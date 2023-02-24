@@ -16,57 +16,51 @@
 #include <openssl/err.h>
 
 using namespace std;
-void add_user(const string& username, const filesystem::path& public_key_dir, const filesystem::path& private_key_dir, bool admin = false) {
-    // Generate RSA key pair
-    RSA* rsa = RSA_new();
-    BIGNUM* bn = BN_new();
-    BN_set_word(bn, RSA_F4);
-    RSA_generate_key_ex(rsa, 2048, bn, NULL);
+void add_user(const std::string& username, const std::filesystem::path& public_key_dir, const std::filesystem::path& key_file_dir, bool admin = false) {
+    if (admin) {
+        // Generate admin SSH key pair
+        std::string admin_username = "admin";
+        std::filesystem::path admin_pub_key_file = public_key_dir / (admin_username + ".pub");
+        std::filesystem::path admin_pri_key_file = key_file_dir / (admin_username + ".pri");
 
-    // Create EVP_PKEY object
-    EVP_PKEY* pkey = EVP_PKEY_new();
-    if (!pkey) {
-        cerr << "Failed to create EVP_PKEY object" << endl;
-        RSA_free(rsa);
-        BN_free(bn);
+        std::string admin_ssh_keygen_cmd = "ssh-keygen -t rsa -b 2048 -f " + admin_pri_key_file.string() + " -N '' -q";
+        system(admin_ssh_keygen_cmd.c_str());
+
+        // Move public key to public key directory
+        std::filesystem::path admin_pub_key_temp_file = admin_pri_key_file.parent_path() / (admin_username + ".pri.pub");
+        std::filesystem::rename(admin_pub_key_temp_file, admin_pub_key_file);
+        for (const auto& entry : std::filesystem::directory_iterator(key_file_dir)) {
+            std::cout << entry.path() << '\n';
+        }
+        for (const auto& entry : std::filesystem::directory_iterator(public_key_dir)) {
+            std::cout << entry.path() << '\n';
+        }
+        // Move private key to keyfile directory
+        std::filesystem::rename(admin_pri_key_file, key_file_dir / (admin_username + "_keyfile"));
+
+        std::cout << "Admin key pair generated successfully." << std::endl;
         return;
     }
-    EVP_PKEY_set1_RSA(pkey, rsa);
+    std::filesystem::path pub_key_file = public_key_dir / (username + ".pub");
+    std::filesystem::path pri_key_file = key_file_dir / (username + ".pri");
+    // Generate SSH key pair
+    std::string ssh_keygen_cmd = "ssh-keygen -t rsa -b 2048 -f " + pri_key_file.string() + " -N '' -q";
+    system(ssh_keygen_cmd.c_str());
 
-    // Get public key
-    unsigned char* pub_key_der;
-    int pub_key_der_len = i2d_PublicKey(pkey, &pub_key_der);
+    // Move public key to public key directory
+    std::filesystem::path pub_key_temp_file = pri_key_file.parent_path() / (username + ".pri.pub");
+    std::filesystem::rename(pub_key_temp_file, pub_key_file);
 
-    // Write public key to file
-    string pub_key_filename = username + ".pub";
-    if (admin) {
-        pub_key_filename = "admin.pub";
+    // Move private key to keyfile directory
+    std::filesystem::rename(pri_key_file, key_file_dir / (username + "_keyfile"));
+    for (const auto& entry : std::filesystem::directory_iterator(key_file_dir)) {
+        std::cout << entry.path() << '\n';
     }
-    filesystem::path pub_key_file = public_key_dir / pub_key_filename;
-    ofstream pub_key_stream(pub_key_file, ios::binary);
-    pub_key_stream.write((char*)pub_key_der, pub_key_der_len);
-    pub_key_stream.close();
-
-    // Get private key
-    unsigned char* pri_key_der;
-    int pri_key_der_len = i2d_PrivateKey(pkey, &pri_key_der);
-
-    // Write private key to file
-    string pri_key_filename = username + ".pri";
-    if (admin) {
-        pri_key_filename = "admin.pri";
+    for (const auto& entry : std::filesystem::directory_iterator(public_key_dir)) {
+        std::cout << entry.path() << '\n';
     }
-    filesystem::path pri_key_file = private_key_dir / pri_key_filename;
-    ofstream pri_key_stream(pri_key_file, ios::binary);
-    pri_key_stream.write((char*)pri_key_der, pri_key_der_len);
-    pri_key_stream.close();
 
-    // Clean up
-    RSA_free(rsa);
-    BN_free(bn);
-    EVP_PKEY_free(pkey);
-
-    cout << "User " << username << " added successfully." << endl;
+    std::cout << "User " << username << " added successfully." << std::endl;
 }
 
 string get_type_of_user(const std::string &keyfile_name) {
