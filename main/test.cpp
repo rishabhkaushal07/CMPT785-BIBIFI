@@ -7,9 +7,8 @@ using json = nlohmann::json;
 int main() {
     std::ifstream f("metadata.json");
     json jsonfile = json::parse(f);
-
-    jsonfile.push_back({"check","123"});
-
+    json insertVal = R"( {"check","123"} )"_json;
+    jsonfile.update(insertVal);
     std::ofstream file("metadata.json");
     file << jsonfile;
 }
