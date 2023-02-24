@@ -7,6 +7,7 @@
 #include <fstream>
 #include <cstdlib>
 #include "headers/json.hpp"
+#include<bits/stdc++.h>
 using namespace std;
 using json = nlohmann::json;
 
@@ -41,7 +42,7 @@ string Randomizer(int ch){
     return random_string;
 }
 
-string find_filename(string randomized_filename){
+string find_filename(string  username, string randomized_filename){
     //opening file using fstream
     std::ifstream metadata_file("metadata.json");
     json metadata_json = json::parse(metadata_file);
@@ -53,6 +54,50 @@ string find_filename(string randomized_filename){
     // if(strcmp(filename,"not found") == 0)
     //     handleErrors();
     return filename;
+}
+
+string fetch_randomized_file_path(string filepath){
+    char separator = '/';
+    int i = 0;
+    string randomized_path = "";
+    // Temporary string used to split the string.
+    string s; 
+    while (filepath[i] != '\0') {
+        if (filepath[i] != separator) {
+            // Append the char to the temp string.
+            s += filepath[i]; 
+        } else {
+            s = filename_encryption(s);
+            randomized_path = randomized_path+ "/" + s;
+            s.clear();
+        }
+        i++;
+    }
+    // Output the last stored word.
+    randomized_path = randomized_path+ "/" + s;
+    return randomized_path;
+}
+
+string fetch_plaintext_file_path(string randomized_filepath){
+    char separator = '/';
+    int i = 0;
+    string plaintext_path = "";
+    // Temporary string used to split the string.
+    string s; 
+    while (filepath[i] != '\0') {
+        if (filepath[i] != separator) {
+            // Append the char to the temp string.
+            s += filepath[i]; 
+        } else {
+            s = filename_decryption(s);
+            plaintext_path = plaintext_path + "/" + s;
+            s.clear();
+        }
+        i++;
+    }
+    // Output the last stored word.
+    plaintext_path = plaintext_path + "/" + s;
+    return plaintext_path;
 }
 
 string filename_encryption(string filename){
