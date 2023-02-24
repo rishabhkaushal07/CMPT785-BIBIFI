@@ -3,6 +3,7 @@
 #ifndef CMPT785_BIBIFI_USER_AUTHENTICATION_H
 #define CMPT785_BIBIFI_USER_AUTHENTICATION_H
 
+#include "helper_function.h"
 #include "encryption.h"
 #include <string>
 #include <random>
@@ -13,20 +14,22 @@
 #include <regex>
 
 using namespace std;
-void add_user(const std::string& username, bool admin=false) {
+void add_user(const std::string& username, bool admin=false)
+{
     // Check if admin creation, when filesystem first start admin=true, after that admin is not allowed as username
-    if(!admin){
-        if(username == "admin"){
+    if(!admin) {
+        if(username == "admin") {
             std::cout << "Error: Invalid Username." << std::endl;
-        return;
+            return;
         }
     }
+    
     // Check if the username is super long
     if (username.length() > 50) {
         std::cout << "Error: Username is too long." << std::endl;
         return;
     }
-    
+
     // Check that the username only contains letters, numbers, and underscores
     std::regex username_regex("^[a-zA-Z0-9_]*$");
     if (!std::regex_match(username, username_regex)) {
@@ -38,7 +41,7 @@ void add_user(const std::string& username, bool admin=false) {
         std::cout << "User " << username << " already exists." << std::endl;
         return;
     }
-    
+
     std::filesystem::path pri_key_file = "private_keys/" + username;
     // Generate SSH key pair
     std::string ssh_keygen_cmd = "ssh-keygen -t rsa -b 2048 -f " + pri_key_file.string() + " -N '' -q";
@@ -46,7 +49,7 @@ void add_user(const std::string& username, bool admin=false) {
     // Move public key to public key directory
     std::filesystem::path temp_file = "private_keys/" + (username + ".pub");
     std::filesystem::rename(temp_file, "public_keys/" + (username + ".pub"));
-    
+
     // Rename private key
     std::filesystem::rename("private_keys/" + username, ("private_keys/" + username +"_keyfile"));
 
@@ -56,17 +59,7 @@ void add_user(const std::string& username, bool admin=false) {
 bool is_valid_keyfile(const string &username)
 {
     string name = username;
-    // Check if the username is super long
-    if (username.length() > 50) {
-        std::cout << "Error: Keyfile name is too long." << std::endl;
-        return false;
-    }
-    // Check that the username only contains letters, numbers, and underscores
-    std::regex username_regex("^[a-zA-Z0-9_]*$");
-    if (!std::regex_match(username, username_regex)) {
-        std::cout << "Error: Keyfile contains invalid characters." << std::endl;
-        return false;
-    }
+    is_valid_filename(username);
     
     // Paths for private key and public key
     std::filesystem::path private_key_path = "private_keys/" + name + "_keyfile";
