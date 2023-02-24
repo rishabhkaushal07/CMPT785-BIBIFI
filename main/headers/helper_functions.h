@@ -8,12 +8,15 @@
 #include <unistd.h>
 #include <filesystem>
 #include <fstream>
+#include <openssl/rand.h>
+#include <regex>
 
 #include "user_type.h"
 #include "user_features.h"
 
 using namespace std;
 namespace fs = std::filesystem;
+const int KEY_SIZE = 32; //bytes
 
 // TODO: once the filesystem directory and logic is created,
 // TODO: use correct admin_root_path and user_root_path
@@ -264,6 +267,57 @@ bool is_valid_path(string &directory_name, const fs::path& root_path) {
   }
 
   // return false in the end as a failsafe
+  return false;
+
+}
+
+void add_enc_key_to_metadata(string username){
+    // create metadata key file if not present
+    fstream file("metadata/" + username + "_key", ios::out | ios::binary);
+    if (!file.is_open()) {
+        std::cout << "Failed to create user metadata key file" << std::endl;
+        return;
+    }
+    // create 256-bit key 
+    uint8_t key[KEY_SIZE];
+    RAND_bytes(key, KEY_SIZE);
+    file.write((char*)key, KEY_SIZE);
+    file.close();
+}
+
+uint8_t* read_enc_key_from_metadata(string username){
+    fstream file("metadata/" + username + "_key", ios::in | ios::binary);
+    if (!file.is_open()) {
+      std::cout << "Failed to read key from metadata" << std::endl;
+    }
+    uint8_t key[KEY_SIZE];
+    file.read((char*)key, KEY_SIZE);
+    return key;
+}
+bool contains_backticks(const string& input) {
+
+  if (input.find('`') != std::string::npos) {
+    // `backtick` found
+    return false;
+  }
+
+  // `backtick` not found
+  return true;
+}
+
+
+bool is_valid_filename(const string& filename) {
+
+  // reference: https://stackoverflow.com/questions/11794144/regular-expression-for-valid-filename
+  regex pattern("^[a-zA-Z0-9](?:[a-zA-Z0-9 ._-]*[a-zA-Z0-9])?\\.[a-zA-Z0-9_-]+$");
+
+  int max_length = 255;
+
+  // the filename matches pattern and is less than max_length, then return true
+  if((regex_match(filename, pattern)) && (filename.length() < max_length)) {
+    return true;
+  }
+
   return false;
 
 }
