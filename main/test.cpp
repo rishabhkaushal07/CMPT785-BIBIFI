@@ -8,7 +8,8 @@ int main() {
     std::ifstream f("metadata.json");
     json jsonfile = json::parse(f);
     json insertVal = R"( {"check","123"} )"_json;
-    jsonfile.update(insertVal);
+    cout << jsonfile;
+    jsonfile.update(insertVal.begin(), insertVal.end(), true);
     std::ofstream file("metadata.json");
     file << jsonfile;
 }
