@@ -40,7 +40,6 @@ string RandomString(int ch){
 }
 
 string find_filename(string randomized_name){
-    ifstream file;
     Json::Reader reader;  
     Json::Value mapping_value; 
     Json::StyledStreamWriter writer; 
@@ -55,8 +54,8 @@ string find_filename(string randomized_name){
     }
 
     //fetching randomizer-filepath mapping
-    string filename = mapping_value[randomized_name];
-
+    string filename ;
+    filename = mapping_value[randomized_name];
     return filename;
 }
 
