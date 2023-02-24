@@ -27,12 +27,27 @@ int main(int argc, char *argv[]) {
 
       // Create a filesystem, public_keys and private_keys directory, if none exists.
       struct stat sb;
-      if (stat("filesystem", &sb) != 0)
-        mkdir("filesystem",0660);
-      if (stat("public_keys", &sb) != 0)
-        mkdir("public_keys",0660);
-      if (stat("private_keys", &sb) != 0)
-        mkdir("private_keys",0660);
+      mode_t mode = 0666;
+      mode_t old_umask = umask(0); // to ensure the following modes get set
+      if (stat("filesystem", &sb) != 0) {
+        if (mkdir("filesystem", mode) != 0) {
+          std::cerr << "Error creating filesystem." << std::endl;
+          return 1;
+        }
+      }
+      if (stat("public_keys", &sb) != 0) {
+        if (mkdir("public_keys", mode) != 0) {
+          std::cerr << "Error creating public_keys." << std::endl;
+          return 1;
+        }
+      }
+      if (stat("private_keys", &sb) != 0) {
+        if (mkdir("private_keys", mode) != 0) {
+          std::cerr << "Error creating private_keys." << std::endl;
+          return 1;
+        }
+      }
+      umask(old_umask); // Restore the original umask value
 
       // user authenticated, allow "available commands" to be run
       user_features(user_type, filesystem_path);
