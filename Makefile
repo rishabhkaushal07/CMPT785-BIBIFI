@@ -5,3 +5,9 @@ all: main/main.cpp
 
 clean:
 	rm -rf fileserver
+
+build-docker:
+	docker build -t bibifi .
+
+run-docker:
+	docker run -it bibifi
