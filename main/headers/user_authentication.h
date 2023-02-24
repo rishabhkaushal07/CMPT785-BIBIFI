@@ -53,70 +53,44 @@ void add_user(const std::string& username, bool admin=false) {
     std::cout << "User " << username << " added successfully." << std::endl;
 }
 
-string get_type_of_user(const std::string &keyfile_name) {
-
-  // First check if the keyfile is a valid file for or not
-  //if (is_valid_keyfile(keyfile_name)) {
-
-    // After authenticating that the keyfile is valid and appropriate
-    // Decrypt the filesystem and,
-    decrypt_filesystem();
-
-    // Return the type of the user based on the keyfile
-    string username = keyfile_name;
-    if (username == "admin_keyfile") {
-      username = "admin";
-    } else {
-      username.erase(username.find_first_of("_ "));
+bool is_valid_keyfile(const string &username)
+{
+    string name = username;
+    // Paths for private key and public key
+    std::filesystem::path private_key_path = "private_keys/" + name + "_keyfile";
+    std::filesystem::path public_key_path = "public_keys/" + name + ".pub";
+    
+    // Extract the public key from the private key
+    std::string command = "ssh-keygen -y -f " + private_key_path.string();
+    std::array<char, 128> buffer;
+    std::string expected_public_key;
+    std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
+    if (!pipe) {
+        std::cerr << "Failed to run command: " << command << std::endl;
+        return false;
     }
-    cout << "Logged in as " << username << endl;
-    return username;
-  }
-  /*
-  // Since the user wasn't authenticated, the login was failed and the program was exited.
-  cout << "Invalid keyfile" << endl;
-  // Before exiting encrypt the filesystem again
-  encrypt_filesystem();
-  exit(EXIT_FAILURE);
-  */
+    while (fgets(buffer.data(), static_cast<int>(buffer.size()), pipe.get()) != nullptr) {
+        expected_public_key += buffer.data();
+    }
+    
+    // Compare it to public key
+    std::ifstream public_key_file(public_key_path);
+    std::string public_key((std::istreambuf_iterator<char>(public_key_file)), std::istreambuf_iterator<char>());
+    public_key_file.close();
+
+    return expected_public_key == public_key;
 }
 
-// TODO: Implement authentication, currently it just checks that keyfile should not be empty
-/*
-bool is_valid_keyfile(const string &keyfile_name) {
-    EVP_PKEY* pkey = nullptr;
-    FILE* fp = nullptr;
-    bool result = false;
-
-    // Open the keyfile for reading
-    fp = fopen(keyfile_name.c_str(), "rb");
-    if (!fp) {
-        std::cerr << "Error opening keyfile: " << keyfile_name << std::endl;
-        goto cleanup;
+string get_type_of_user(const std::string &keyfile_name)
+{
+    string username = keyfile_name;
+    username.erase(username.find_first_of("_ "));
+    if (is_valid_keyfile(username)) {
+        cout << "Logged in as " << username << endl;
+        return username;
     }
-
-    // Read the public key from the keyfile
-    pkey = PEM_read_PUBKEY(fp, nullptr, nullptr, nullptr);
-    if (!pkey) {
-        std::cerr << "Error reading public key from keyfile: " << keyfile_name << std::endl;
-        goto cleanup;
-    }
-
-    // If we got this far, the keyfile is valid
-    result = true;
-
-cleanup:
-    // Clean up resources
-    if (fp) {
-        fclose(fp);
-    }
-    if (pkey) {
-        EVP_PKEY_free(pkey);
-    }
-    */
-    // before exiting encrypt the filesystem again
-    encrypt_filesystem();
-    return result;
+    cout << "Invalid keyfile" << endl;
+    exit(EXIT_FAILURE);
 }
 
 #endif // CMPT785_BIBIFI_USER_AUTHENTICATION_H
