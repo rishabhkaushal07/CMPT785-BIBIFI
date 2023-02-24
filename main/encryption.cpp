@@ -58,50 +58,6 @@ string find_filename(string  username, string randomized_filename){
     return filename;
 }
 
-string fetch_randomized_file_path(string filepath){
-    char separator = '/';
-    int i = 0;
-    string randomized_path = "";
-    // Temporary string used to split the string.
-    string s; 
-    while (filepath[i] != '\0') {
-        if (filepath[i] != separator) {
-            // Append the char to the temp string.
-            s += filepath[i]; 
-        } else {
-            s = filename_encryption(s);
-            randomized_path = randomized_path+ "/" + s;
-            s.clear();
-        }
-        i++;
-    }
-    // Output the last stored word.
-    randomized_path = randomized_path+ "/" + s;
-    return randomized_path;
-}
-
-string fetch_plaintext_file_path(string randomized_filepath){
-    char separator = '/';
-    int i = 0;
-    string plaintext_path = "";
-    // Temporary string used to split the string.
-    string s; 
-    while (randomized_filepath[i] != '\0') {
-        if (randomized_filepath[i] != separator) {
-            // Append the char to the temp string.
-            s += randomized_filepath[i]; 
-        } else {
-            s = filename_decryption(s);
-            plaintext_path = plaintext_path + "/" + s;
-            s.clear();
-        }
-        i++;
-    }
-    // Output the last stored word.
-    plaintext_path = plaintext_path + "/" + s;
-    return plaintext_path;
-}
-
 string filename_encryption(string filename){
     srand(time(NULL));
     
@@ -129,6 +85,50 @@ string filename_decryption(string randomized_filename){
     //Fetching the filename from the metadata JSON file and returning the filename
     filename = find_filename(randomized_filename);
     return filename;
+}
+
+string fetch_randomized_file_path(string filepath){
+    char separator = '/';
+    int i = 0;
+    string randomized_path = "";
+    // Temporary string used to split the string.
+    string s,temp; 
+    while (filepath[i] != '\0') {
+        if (filepath[i] != separator) {
+            // Append the char to the temp string.
+            s += filepath[i]; 
+        } else {
+            temp = filename_encryption(s);
+            randomized_path = randomized_path+ "/" + temp;
+            s.clear();
+        }
+        i++;
+    }
+    // Output the last stored word.
+    randomized_path = randomized_path+ "/" + temp;
+    return randomized_path;
+}
+
+string fetch_plaintext_file_path(string randomized_filepath){
+    char separator = '/';
+    int i = 0;
+    string plaintext_path = "";
+    // Temporary string used to split the string.
+    string s; 
+    while (randomized_filepath[i] != '\0') {
+        if (randomized_filepath[i] != separator) {
+            // Append the char to the temp string.
+            s += randomized_filepath[i]; 
+        } else {
+            s = filename_decryption(s);
+            plaintext_path = plaintext_path + "/" + s;
+            s.clear();
+        }
+        i++;
+    }
+    // Output the last stored word.
+    plaintext_path = plaintext_path + "/" + s;
+    return plaintext_path;
 }
 
 // void encrypt_file(string filePath, string content, unsigned char *key) {
