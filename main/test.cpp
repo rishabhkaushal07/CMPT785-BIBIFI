@@ -5,9 +5,10 @@ using namespace std;
 using json = nlohmann::json;
 
 int main() {
-    json jsonfile;
+    std::ifstream f("metadata.json");
+    json jsonfile = json::parse(f);
 
-    jsonfile["check"] = "123";
+    jsonfile.push_back({"check","123"});
 
     std::ofstream file("metadata.json");
     file << jsonfile;
