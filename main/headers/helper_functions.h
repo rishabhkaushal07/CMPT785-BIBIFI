@@ -281,13 +281,15 @@ void add_enc_key_to_metadata(string username){
     file.close();
 }
 
-uint8_t* read_enc_key_from_metadata(string username){
+vector<uint8_t> read_enc_key_from_metadata(string username) {
     fstream file("metadata/" + username + "_key", ios::in | ios::binary);
     if (!file.is_open()) {
-      std::cout << "Failed to read key from metadata" << std::endl;
+      cout << "Failed to read key from metadata" << endl;
+      // return an empty vector if the file failed to open
+      return vector<uint8_t>{};
     }
-    uint8_t key[KEY_SIZE];
-    file.read((char*)key, KEY_SIZE);
+    vector<uint8_t> key(KEY_SIZE);
+    file.read(reinterpret_cast<char*>(key.data()), key.size());
     return key;
 }
 

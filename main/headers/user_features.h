@@ -31,7 +31,7 @@ string custom_pwd(string &filesystem_path) {
   return pwd;
 }
 
-int user_features(string user_name, User_type user_type, uint8_t* key, string filesystem_path) {
+int user_features(string user_name, User_type user_type, vector<uint8_t> key, string filesystem_path) {
 
   cout << "=======================" << endl;
   cout << "Available commands are: \n" << endl;
