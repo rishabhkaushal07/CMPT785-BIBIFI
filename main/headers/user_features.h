@@ -20,7 +20,7 @@ namespace fs = std::filesystem;
 // TODO: use correct admin_root_path and user_root_path
 
 // Set the new root directory here
-fs::path admin_root_path = fs::current_path();
+fs::path admin_root_path = fs::current_path() / "filesystem";
 fs::path user_root_path = fs::current_path();
 
 fs::path root_path;
@@ -55,18 +55,18 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
     root_path = user_root_path;
   }
 
+  fs::current_path(root_path);
   string input_feature, cmd, filename, username, directory_name, contents;
 
   do {
 
-    // TODO: Replace "user_name" with actual user_name
     cout << user_name << " " << custom_pwd(filesystem_path) << "> ";
     // get command from the user
     getline(std::cin, input_feature);
 
     if (cin.eof()) {
         // Ctrl+D was pressed
-        std::cout << "EOF detected." << std::endl;
+        std::cout << "Ctrl+D detected." << std::endl;
         return 1;
     }
 
@@ -557,6 +557,7 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
               // TODO - replace the system call with encryption fn
               // create file
               cout << "try creating file.. " << endl;
+              string path = custom_pwd(filesystem_path);
               mkfile(filename, contents);
             } else {
               cerr << "not a valid filename, try again" << endl;
