@@ -21,7 +21,7 @@ namespace fs = std::filesystem;
 
 // Set the new root directory here
 fs::path admin_root_path = fs::current_path() / "filesystem";
-fs::path user_root_path = fs::current_path();
+fs::path user_root_path = fs::current_path() / "filesystem";
 
 fs::path root_path;
 
@@ -44,12 +44,10 @@ void add_contents_to_file(string filename, string filepath, string content) {
   }
 }
 
-void share_file(string username, string file, string filesystem_path) {
+void share_file(uint8_t* key, string username, string filename, string filesystem_path) {
   // check if file exists
-  if (fs::exists(file)) {
-      std::cout << "File exists." << std::endl;
-  } else {
-      std::cout << "File does not exist." << std::endl;
+  if (!fs::exists(filename)) {
+      cout << "File does not exist." << endl;
       return;
   }
 
@@ -63,27 +61,32 @@ void share_file(string username, string file, string filesystem_path) {
     entry_path.erase(0, delete_upto);
     if (username == entry_path) {
       if_user_exists = true;
-      cout << "user " << entry_path << " exists!" << endl;
+      break;
     }
   }
 
   if (!if_user_exists) {
-    cout << "user " << username << " does not exists!" <<endl;
+    cout << "User " << username << " does not exist!" <<endl;
     return;
   }
 
+  string content = "decrypt_file(filename, key)";
+  string share_user_path = filesystem_path + "/filesystem/" + username + "/shared/" + filename;
+  uint8_t* share_key = read_enc_key_from_metadata(username, filesystem_path + "/metadata/");
+  encrypt_file(share_user_path, content, share_key);
+
   string shared_data_path = filesystem_path + "/shared_files";
-  add_contents_to_file(file, shared_data_path, username);
+  add_contents_to_file(filename, shared_data_path, username);
 }
 
 vector<string> check_if_shared(string filename, string filesystem_path) {
   vector<string> usernames;
-  string filepath = filesystem_path + "/shared_files/" + filename
+  string filepath = filesystem_path + "/shared_files/" + filename;
   if (fs::exists(filepath)) {
       ifstream file(filepath);
       string line;
       while (getline(file, line)) {
-          usernames.append(line);
+          usernames.push_back(line);
       }
       file.close();
   } 
@@ -91,7 +94,7 @@ vector<string> check_if_shared(string filename, string filesystem_path) {
   return usernames;
 }
 
-int user_features(string user_name, User_type user_type, uint8_t key, string filesystem_path) {
+int user_features(string user_name, User_type user_type, uint8_t* key, string filesystem_path) {
 
   cout << "=======================" << endl;
   cout << "Available commands are: \n" << endl;
@@ -322,7 +325,6 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
             cout << "Staying in current directory." << endl;
 
           }
-
         }
       }
 
@@ -362,6 +364,9 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
       if (filename.empty()) {
         cout << "filename not provided";
       } else {
+        string path = custom_pwd(filesystem_path) + "/" + filename;
+        cout << path <<endl;
+        // cout << decrypt_file(path, key);
         system(("cat " + filename).c_str());
       }
 
@@ -380,14 +385,11 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
      *
        */
 
-
+      string share_username;
       istring_stream >> filename;
-      istring_stream >> username;
-      cout<<filename<<endl;
-      cout<<username<<endl;
+      istring_stream >> share_username;
 
-      share_file(username, filename, filesystem_path);
-
+      share_file(key, share_username, filename, filesystem_path);
 
 
     } else if (cmd == "mkdir") {
@@ -618,6 +620,7 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
       filesystem::path path_obj(filename);
       string filename_str = path_obj.filename().string();
       string parent_path_str = path_obj.parent_path().string();
+      string path = custom_pwd(filesystem_path) + "/" + filename;
 
       // filename contains a path to the filename instead of just the filename
       if (!parent_path_str.empty()) {
@@ -625,11 +628,8 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
         if (is_valid_path(parent_path_str, root_path)){
 
             if(is_valid_filename(filename)) {
-              // TODO - replace the system call with encryption fn
               // create file
-              cout << "try creating file.. " << endl;
-              string path = custom_pwd(filesystem_path);
-              mkfile(filename, contents);
+              encrypt_file(path, contents, key);
             } else {
               cerr << "not a valid filename, try again" << endl;
             }
@@ -637,20 +637,13 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
         }
 
       } else if (!filename_str.empty()) {
-        cout << "The file name is: " << filename_str << std::endl;
-
         if(is_valid_filename(filename)) {
-            // TODO - replace the system call with encryption fn
             // create file
-            cout << "try creating file.. " << endl;
-            mkfile(filename, contents);
+            encrypt_file(path, contents, key);
         } else {
             cerr << "not a valid filename, try again" << endl;
         }
-
       }
-
-
 
     } else if (cmd == "exit") {
       exit(EXIT_SUCCESS);
