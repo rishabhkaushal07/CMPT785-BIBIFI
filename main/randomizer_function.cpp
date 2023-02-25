@@ -142,7 +142,7 @@ int main()
     encrypt_filename("dir1");
     encrypt_filename("dir2");
     string filepath = "dir1/dir2/testfile.txt";
-    string random_fp = get_randomized_file_path(filepath)
+    string random_fp = get_randomized_file_path(filepath);
     cout << "Randomized path: " << random_fp << std::endl;
     cout << "PT_path: " << get_plaintext_file_path(random_fp) << std::endl;
     return 0;
