@@ -530,19 +530,10 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
 
     } else if (cmd == "mkfile") {
 
-      // TODO
-      //`mkfile <filename> <contents>`   -
-      /*
-     * Create a new file with the contents.
-     * The contents will be printable ascii characters.
-     * If a file with <filename> exists, it should replace the contents.
-     * If the file was previously shared, the target user should see the new
-     * contents of the file.
-       */
+      //`mkfile <filename> <contents>`
 
-      // TODO: delete this comment - A string is a group of characters with the last character being "\0".
-      // TODO: should support multi-word and multi-line input
-      istring_stream >> filename >> contents;
+      istring_stream >> filename;
+      getline(istring_stream, contents);
 
 
 
