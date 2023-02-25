@@ -21,7 +21,7 @@ namespace fs = std::filesystem;
 
 // Set the new root directory here
 fs::path admin_root_path = fs::current_path() / "filesystem";
-fs::path user_root_path = fs::current_path();
+fs::path user_root_path = fs::current_path() / "filesystem";
 
 fs::path root_path;
 
@@ -29,6 +29,77 @@ string custom_pwd(string &filesystem_path) {
   string pwd = fs::current_path();
   pwd = pwd.erase(1, filesystem_path.length());
   return pwd;
+}
+
+void add_contents_to_file(string filename, string filepath, string content) {
+  filepath = filepath + "/" + filename;
+  ofstream file(filepath, ios::app);
+  if (fs::exists(filepath)) {
+      file << content << std::endl;
+      file.close();
+  } else {
+      ofstream new_file(filepath);
+      new_file << content << endl;
+      new_file.close();
+  }
+}
+
+void share_file(vector<uint8_t> key, string username, string filename, string filesystem_path) {
+  // check if file exists
+  if (!fs::exists(filename)) {
+      cout << "File does not exist." << endl;
+      return;
+  }
+
+  // fetch user list and check is username exists
+  string path = filesystem_path + "/public_keys";
+  bool if_user_exists = false;
+  for (fs::directory_entry entry : fs::directory_iterator(path)) {
+    string entry_path = entry.path();
+    entry_path.erase(entry_path.size() - 4);
+    int delete_upto = entry_path.find_last_of('/') + 1;
+    entry_path.erase(0, delete_upto);
+    if (username == entry_path) {
+      if_user_exists = true;
+      break;
+    }
+  }
+  if (!if_user_exists) {
+    cout << "User " << username << " does not exist!" <<endl;
+    return;
+  }
+
+  string content = decrypt_file(filename, key);
+  string share_user_path = filesystem_path + "/filesystem/" + username + "/shared/" + filename;
+  vector<uint8_t> share_key = read_enc_key_from_metadata(username, filesystem_path + "/metadata/");
+  encrypt_file(share_user_path, content, share_key);
+
+  string shared_data_path = filesystem_path + "/shared_files";
+  add_contents_to_file(filename, shared_data_path, username);
+}
+
+void update_shared_files(vector<string> usernames, string filename, string filesystem_path, string content) {
+  for (const string& username : usernames) {
+    string share_user_path = filesystem_path + "/filesystem/" + username + "/shared/" + filename;
+    vector<uint8_t> share_key = read_enc_key_from_metadata(username, filesystem_path + "/metadata/");
+    encrypt_file(share_user_path, content, share_key);
+  }
+}
+
+void check_if_shared(string filename, string filesystem_path, string content) {
+  vector<string> usernames;
+  string filepath = filesystem_path + "/shared_files/" + filename;
+  if (fs::exists(filepath)) {
+      ifstream file(filepath);
+      string line;
+      while (getline(file, line)) {
+          usernames.push_back(line);
+      }
+      file.close();
+  } 
+
+  update_shared_files(usernames, filename, filesystem_path, content);
+
 }
 
 int user_features(string user_name, User_type user_type, vector<uint8_t> key, string filesystem_path) {
@@ -55,7 +126,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
   } else if (user_type == user) {
     cout << "=======================" << endl;
     // set root path = user's root path which is its own directory
-    root_path = user_root_path;
+    root_path = user_root_path / user_name;
   }
 
   fs::current_path(root_path);
@@ -262,7 +333,6 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
             cout << "Staying in current directory." << endl;
 
           }
-
         }
       }
 
@@ -302,7 +372,9 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
       if (filename.empty()) {
         cout << "filename not provided";
       } else {
-        system(("cat " + filename).c_str());
+        // string path = custom_pwd(filesystem_path) + "/" + filename;
+        cout << decrypt_file(filename, key) << endl;
+        // system(("cat " + filename).c_str());
       }
 
     } else if (cmd == "share") {
@@ -319,6 +391,14 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
      * file.
      *
        */
+
+      string share_username;
+      istring_stream >> filename;
+      istring_stream >> share_username;
+
+      share_file(key, share_username, filename, filesystem_path);
+
+
     } else if (cmd == "mkdir") {
 
       // create a new directory
@@ -535,11 +615,10 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
       istring_stream >> filename;
       getline(istring_stream, contents);
 
-
-
       filesystem::path path_obj(filename);
       string filename_str = path_obj.filename().string();
       string parent_path_str = path_obj.parent_path().string();
+      string path = custom_pwd(filesystem_path) + "/" + filename;
 
       // filename contains a path to the filename instead of just the filename
       if (!parent_path_str.empty()) {
@@ -547,11 +626,9 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         if (is_valid_path(parent_path_str, root_path)){
 
             if(is_valid_filename(filename)) {
-              // TODO - replace the system call with encryption fn
               // create file
-              cout << "try creating file.. " << endl;
-              string path = custom_pwd(filesystem_path);
               encrypt_file(filename, contents, key);
+              check_if_shared(filename, filesystem_path, contents);
             } else {
               cerr << "not a valid filename, try again" << endl;
             }
@@ -559,27 +636,22 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         }
 
       } else if (!filename_str.empty()) {
-        cout << "The file name is: " << filename_str << std::endl;
-
         if(is_valid_filename(filename)) {
-            // TODO - replace the system call with encryption fn
             // create file
-            cout << "try creating file.. " << endl;
             encrypt_file(filename, contents, key);
+            check_if_shared(filename, filesystem_path, contents);
         } else {
             cerr << "not a valid filename, try again" << endl;
         }
-
       }
-
-
 
     } else if (cmd == "exit") {
       exit(EXIT_SUCCESS);
 
     } else if ((cmd == "adduser") && (user_type == admin)) {
-        istring_stream >> filename;
-        add_user(filename);
+        string new_user;
+        istring_stream >> new_user;
+        add_user(new_user, filesystem_path, false);
 
     } else {
 

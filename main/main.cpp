@@ -31,15 +31,11 @@ int main(int argc, char *argv[]) {
         user_type = user;
 
       // read user's enc key from metadata file
-      user_features(user_name, user_type, read_enc_key_from_metadata(user_name), filesystem_path);
+      user_features(user_name, user_type, read_enc_key_from_metadata(user_name, ""), filesystem_path);
     }
   }
   else{
     mode_t old_umask = umask(0); // to ensure the following modes get set
-    if (mkdir("filesystem", mode) != 0) {
-      std::cerr << "Error creating filesystem." << std::endl;
-      return 1;
-    }
     if (mkdir("public_keys", mode) != 0) {
       std::cerr << "Error creating public_keys." << std::endl;
       return 1;
@@ -52,9 +48,17 @@ int main(int argc, char *argv[]) {
       std::cerr << "Error creating metadata directory." << std::endl;
       return 1;
     }
+    if (mkdir("shared_files", mode) != 0) {
+      std::cerr << "Error creating shared_files directory." << std::endl;
+      return 1;
+    }
+    if (mkdir("filesystem", mode) != 0) {
+      std::cerr << "Error creating filesystem." << std::endl;
+      return 1;
+    }
     umask(old_umask); // Restore the original umask value
     string user_name = "admin";
-    add_user(user_name,true);
-    user_features(user_name, admin, read_enc_key_from_metadata(user_name), filesystem_path);
+    add_user(user_name, filesystem_path, true);
+    user_features(user_name, admin, read_enc_key_from_metadata(user_name, ""), filesystem_path);
   }
 }

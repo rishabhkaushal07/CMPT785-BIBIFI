@@ -15,8 +15,9 @@
 #include "helper_functions.h"
 
 using namespace std;
-void add_user(const std::string& username, bool admin=false)
+void add_user(const string& username, string path, bool admin=false)
 {
+    path = path + "/";
     // Check if admin creation, when filesystem first start admin=true, after that admin is not allowed as username
     if(!admin) {
         if(username == "admin") {
@@ -38,25 +39,25 @@ void add_user(const std::string& username, bool admin=false)
         return;
     }
     // Check if the user already exist
-    if (std::filesystem::exists("public_keys/" + (username + ".pub")) || std::filesystem::exists("private_keys/" + (username + "_keyfile"))) {
+    if (std::filesystem::exists(path + "public_keys/" + (username + ".pub")) || std::filesystem::exists(path + "private_keys/" + (username + "_keyfile"))) {
         std::cout << "User " << username << " already exists." << std::endl;
         return;
     }
 
-    std::filesystem::path pri_key_file = "private_keys/" + username;
+    std::filesystem::path pri_key_file = path + "private_keys/" + username;
     // Generate SSH key pair
     std::string ssh_keygen_cmd = "ssh-keygen -t rsa -b 2048 -f " + pri_key_file.string() + " -N '' -q";
     system(ssh_keygen_cmd.c_str());
     // Move public key to public key directory
-    std::filesystem::path temp_file = "private_keys/" + (username + ".pub");
-    std::filesystem::rename(temp_file, "public_keys/" + (username + ".pub"));
+    std::filesystem::path temp_file = path + "private_keys/" + (username + ".pub");
+    std::filesystem::rename(temp_file, path + "public_keys/" + (username + ".pub"));
 
     // Rename private key
-    std::filesystem::rename("private_keys/" + username, ("private_keys/" + username +"_keyfile"));
+    std::filesystem::rename(path + "private_keys/" + username, (path + "private_keys/" + username + "_keyfile"));
 
     std::cout << "User " << username << " added successfully." << std::endl;
-    add_enc_key_to_metadata(username);
-    create_init_fs_for_user(username);
+    add_enc_key_to_metadata(username, path);
+    create_init_fs_for_user(username, path);
 }
 
 bool is_valid_keyfile(const string &username)
