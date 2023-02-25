@@ -15,29 +15,29 @@ string get_plaintext_file_path(string randomized_filepath);
 string encrypt_filename(string filename);
 string decrypt_filename(string randomized_name);
 
-std::string Randomizer(int ch) {
+string Randomizer(int ch) {
     // For randomised string generation
-    const std::string letters = "abcdefghijklmnopqrstuvwxyz";
-    std::stringstream random_string;
+    const string letters = "abcdefghijklmnopqrstuvwxyz";
+    stringstream random_string;
     srand(static_cast<unsigned int>(time(nullptr)));
     for (int i = 0; i < ch; ++i) {
-        random_string << letters[std::rand() % letters.length()];
+        random_string << letters[rand() % letters.length()];
     }
     return random_string.str();
 }
 
 json read_metadata_json(){
-    std::ifstream metadata_file("metadata.json");
+    ifstream metadata_file("metadata.json");
     json metadata_json = json::parse(metadata_file);
     return metadata_json;
 }
 
-std::string get_filename(string randomized_filename){
+string get_filename(string randomized_filename){
     // Parsing JSON object
-    std::ifstream metadata_file("metadata.json");
+    ifstream metadata_file("metadata.json");
     json metadata_json = json::parse(metadata_file);
     // Fetching randomized_filename filepath mapping
-    std::string filename = metadata_json[randomized_filename];
+    string filename = metadata_json[randomized_filename];
     // TODO: error handling
     // if (filename.empty())
     //     handleErrors();
@@ -110,14 +110,14 @@ string encrypt_filename(string filename){
     //Generating the random string for filename
     string randomized_filename = Randomizer(10);
     //Reading the metadata JSON for inserting the randomizer-filename mapping
-    std::ifstream metadata_file("metadata.json");
+    ifstream metadata_file("metadata.json");
     json metadata_json = json::parse(metadata_file);
     json input_json = json::object();
     input_json[randomized_filename] = filename;
 
     //Inserting the new mapping into the metadata JSON file
     metadata_json.update(input_json.begin(), input_json.end(), true);
-    std::ofstream file("metadata.json");
+    ofstream file("metadata.json");
 
     //Writing into the metadata JSON file and returning the random string
     file << metadata_json;
@@ -135,15 +135,15 @@ int main()
 {
     string filename = "testfile.txt";
     string random_name = encrypt_filename(filename);
-    cout << "Filename_encryption: " << random_name << std::endl;
-    cout << "Filename_decryption: " << decrypt_filename(random_name) << std::endl;
-    cout << "Get_filename: " << get_filename(random_name) << std::endl;
-    cout << "Get_random_name: " << get_randomized_name(filename) << std::endl;
+    cout << "Filename_encryption: " << random_name << endl;
+    cout << "Filename_decryption: " << decrypt_filename(random_name) << endl;
+    cout << "Get_filename: " << get_filename(random_name) << endl;
+    cout << "Get_random_name: " << get_randomized_name(filename) << endl;
     encrypt_filename("dir1");
     encrypt_filename("dir2");
     string filepath = "dir1/dir2/testfile.txt";
     string random_fp = get_randomized_file_path(filepath);
-    cout << "Randomized path: " << random_fp << std::endl;
-    cout << "PT_path: " << get_plaintext_file_path(random_fp) << std::endl;
+    cout << "Randomized path: " << random_fp << endl;
+    cout << "PT_path: " << get_plaintext_file_path(random_fp) << endl;
     return 0;
 }
