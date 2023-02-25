@@ -6,14 +6,14 @@
 using namespace std;
 using json = nlohmann::json;
 
-string Randomizer(int ch);
-json read_metadata_json(void);
-string get_filename(string randomized_name);
-string get_randomized_name(string filename);
-string get_randomized_file_path(string filepath);
-string get_plaintext_file_path(string randomized_filepath);
-string encrypt_filename(string filename);
-string decrypt_filename(string randomized_name);
+// string Randomizer(int ch);
+// json read_metadata_json(void);
+// string get_filename(string randomized_name);
+// string get_randomized_name(string filename);
+// string get_randomized_file_path(string filepath);
+// string get_plaintext_file_path(string randomized_filepath);
+// string encrypt_filename(string filename);
+// string decrypt_filename(string randomized_name);
 
 string Randomizer(int ch) {
     srand(time(NULL));
