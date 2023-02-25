@@ -33,6 +33,7 @@ string custom_pwd(string &filesystem_path) {
 
 int user_features(string user_name, User_type user_type, uint8_t key, string filesystem_path) {
 
+  cout << "=======================" << endl;
   cout << "Available commands are: \n" << endl;
 
   cout << "cd <directory> \n"
@@ -47,10 +48,12 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
   if (user_type == admin) {
     // if admin, allow the following command
     cout << "adduser <username>" << endl;
+    cout << "=======================" << endl;
 
     // also set root path to admin path which is the whole fs
     root_path = admin_root_path;
   } else if (user_type == user) {
+    cout << "=======================" << endl;
     // set root path = user's root path which is its own directory
     root_path = user_root_path;
   }
@@ -525,7 +528,6 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
         }
       }
 
-
     } else if (cmd == "mkfile") {
 
       // TODO
@@ -592,9 +594,6 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
 
       cout << "Invalid Command" << endl;
 
-      // before exiting encrypt the filesystem again
-      // encrypt_filesystem();
-      // return 1;
     }
 
   } while (cmd != "exit"); // only exit out of command line when using "exit" cmd
