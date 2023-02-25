@@ -20,7 +20,7 @@ namespace fs = std::filesystem;
 // TODO: use correct admin_root_path and user_root_path
 
 // Set the new root directory here
-fs::path admin_root_path = fs::current_path();
+fs::path admin_root_path = fs::current_path() / "filesystem";
 fs::path user_root_path = fs::current_path();
 
 fs::path root_path;
@@ -31,8 +31,9 @@ string custom_pwd(string &filesystem_path) {
   return pwd;
 }
 
-int user_features(string user_name, User_type user_type, uint8_t* key, string filesystem_path) {
+int user_features(string user_name, User_type user_type, vector<uint8_t> key, string filesystem_path) {
 
+  cout << "=======================" << endl;
   cout << "Available commands are: \n" << endl;
 
   cout << "cd <directory> \n"
@@ -47,22 +48,30 @@ int user_features(string user_name, User_type user_type, uint8_t* key, string fi
   if (user_type == admin) {
     // if admin, allow the following command
     cout << "adduser <username>" << endl;
+    cout << "=======================" << endl;
 
     // also set root path to admin path which is the whole fs
     root_path = admin_root_path;
   } else if (user_type == user) {
+    cout << "=======================" << endl;
     // set root path = user's root path which is its own directory
     root_path = user_root_path;
   }
 
+  fs::current_path(root_path);
   string input_feature, cmd, filename, username, directory_name, contents;
 
   do {
 
-    // TODO: Replace "user_name" with actual user_name
-    cout << "user_name" << " " << custom_pwd(filesystem_path) << "> ";
+    cout << user_name << " " << custom_pwd(filesystem_path) << "> ";
     // get command from the user
     getline(std::cin, input_feature);
+
+    if (cin.eof()) {
+        // Ctrl+D was pressed
+        std::cout << "Ctrl+D detected." << std::endl;
+        return 1;
+    }
 
     // get the first word (command) from the input
     istringstream istring_stream(input_feature);
@@ -257,8 +266,6 @@ int user_features(string user_name, User_type user_type, uint8_t* key, string fi
         }
       }
 
-
-
     } else if (cmd == "pwd") {
 
       string pwd = custom_pwd(filesystem_path);
@@ -294,9 +301,6 @@ int user_features(string user_name, User_type user_type, uint8_t* key, string fi
       istring_stream >> filename;
       if (filename.empty()) {
         cout << "filename not provided";
-
-        // before exiting encrypt the filesystem again
-        encrypt_filesystem();
       } else {
         system(("cat " + filename).c_str());
       }
@@ -524,7 +528,6 @@ int user_features(string user_name, User_type user_type, uint8_t* key, string fi
         }
       }
 
-
     } else if (cmd == "mkfile") {
 
       //`mkfile <filename> <contents>`
@@ -547,7 +550,8 @@ int user_features(string user_name, User_type user_type, uint8_t* key, string fi
               // TODO - replace the system call with encryption fn
               // create file
               cout << "try creating file.. " << endl;
-              mkfile(filename, contents);
+              string path = custom_pwd(filesystem_path);
+              encrypt_file(filename, contents, key);
             } else {
               cerr << "not a valid filename, try again" << endl;
             }
@@ -561,7 +565,7 @@ int user_features(string user_name, User_type user_type, uint8_t* key, string fi
             // TODO - replace the system call with encryption fn
             // create file
             cout << "try creating file.. " << endl;
-            mkfile(filename, contents);
+            encrypt_file(filename, contents, key);
         } else {
             cerr << "not a valid filename, try again" << endl;
         }
@@ -571,10 +575,7 @@ int user_features(string user_name, User_type user_type, uint8_t* key, string fi
 
 
     } else if (cmd == "exit") {
-
-      // before exiting encrypt the filesystem again
-      encrypt_filesystem();
-      exit(EXIT_FAILURE);
+      exit(EXIT_SUCCESS);
 
     } else if ((cmd == "adduser") && (user_type == admin)) {
         istring_stream >> filename;
@@ -584,15 +585,10 @@ int user_features(string user_name, User_type user_type, uint8_t* key, string fi
 
       cout << "Invalid Command" << endl;
 
-      // before exiting encrypt the filesystem again
-      // encrypt_filesystem();
-      // return 1;
     }
 
   } while (cmd != "exit"); // only exit out of command line when using "exit" cmd
 
-  // before exiting encrypt the filesystem again
-  encrypt_filesystem();
   return 1;
 }
 
