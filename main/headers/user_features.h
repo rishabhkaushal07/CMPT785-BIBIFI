@@ -31,6 +31,66 @@ string custom_pwd(string &filesystem_path) {
   return pwd;
 }
 
+void add_contents_to_file(string filename, string filepath, string content) {
+  filepath = filepath + "/" + filename;
+  ofstream file(filepath, ios::app);
+  if (fs::exists(filepath)) {
+      file << content << std::endl;
+      file.close();
+  } else {
+      ofstream new_file(filepath);
+      new_file << content << endl;
+      new_file.close();
+  }
+}
+
+void share_file(string username, string file, string filesystem_path) {
+  // check if file exists
+  if (fs::exists(file)) {
+      std::cout << "File exists." << std::endl;
+  } else {
+      std::cout << "File does not exist." << std::endl;
+      return;
+  }
+
+  // fetch user list and check is username exists
+  string path = filesystem_path + "/public_keys";
+  bool if_user_exists = false;
+  for (fs::directory_entry entry : fs::directory_iterator(path)) {
+    string entry_path = entry.path();
+    entry_path.erase(entry_path.size() - 4);
+    int delete_upto = entry_path.find_last_of('/') + 1;
+    entry_path.erase(0, delete_upto);
+    if (username == entry_path) {
+      if_user_exists = true;
+      cout << "user " << entry_path << " exists!" << endl;
+    }
+  }
+
+  if (!if_user_exists) {
+    cout << "user " << username << " does not exists!" <<endl;
+    return;
+  }
+
+  string shared_data_path = filesystem_path + "/shared_files";
+  add_contents_to_file(file, shared_data_path, username);
+}
+
+vector<string> check_if_shared(string filename, string filesystem_path) {
+  vector<string> usernames;
+  string filepath = filesystem_path + "/shared_files/" + filename
+  if (fs::exists(filepath)) {
+      ifstream file(filepath);
+      string line;
+      while (getline(file, line)) {
+          usernames.append(line);
+      }
+      file.close();
+  } 
+
+  return usernames;
+}
+
 int user_features(string user_name, User_type user_type, uint8_t key, string filesystem_path) {
 
   cout << "=======================" << endl;
@@ -55,7 +115,7 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
   } else if (user_type == user) {
     cout << "=======================" << endl;
     // set root path = user's root path which is its own directory
-    root_path = user_root_path;
+    root_path = user_root_path / user_name;
   }
 
   fs::current_path(root_path);
@@ -319,6 +379,17 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
      * file.
      *
        */
+
+
+      istring_stream >> filename;
+      istring_stream >> username;
+      cout<<filename<<endl;
+      cout<<username<<endl;
+
+      share_file(username, filename, filesystem_path);
+
+
+
     } else if (cmd == "mkdir") {
 
       // create a new directory
@@ -543,8 +614,6 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
       // TODO: delete this comment - A string is a group of characters with the last character being "\0".
       // TODO: should support multi-word and multi-line input
       istring_stream >> filename >> contents;
-
-
 
       filesystem::path path_obj(filename);
       string filename_str = path_obj.filename().string();
