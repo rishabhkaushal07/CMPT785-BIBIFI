@@ -7,7 +7,7 @@ using namespace std;
 using json = nlohmann::json;
 
 string Randomizer(int ch);
-string read_metadata_json();
+json read_metadata_json(void);
 string get_filename(string randomized_name);
 string get_randomized_name(string filename);
 string get_randomized_file_path(string filepath);
@@ -52,10 +52,11 @@ string get_randomized_name(string filename){
     // Iterate over the JSON object and check the value of each key
     for (auto itr = obj.begin(); itr != obj.end(); ++itr) {
         if (itr.value() == filename) {
-            randomized_name = it.key();
+            randomized_name = itr.key();
             break;
         }
     }
+    return randomized_name;
 }
 
 string get_randomized_file_path(string filepath){
@@ -81,7 +82,7 @@ string get_randomized_file_path(string filepath){
     return randomized_path;
 }
 
-string fetch_plaintext_file_path(string randomized_filepath){
+string get_plaintext_file_path(string randomized_filepath){
     char separator = '/';
     int i = 0;
     string plaintext_path = "";
@@ -126,7 +127,7 @@ string encrypt_filename(string filename){
 string decrypt_filename(string randomized_filename){
     string filename;
     //Fetching the filename from the metadata JSON file and returning the filename
-    filename = find_filename(randomized_filename);
+    filename = get_filename(randomized_filename);
     return filename;
 }
 
@@ -142,6 +143,6 @@ int main()
     encrypt_filename("dir2");
     string filepath = "dir1/dir2/testfile.txt";
     cout << "Randomized path: " << get_randomized_file_path(filepath) << std::endl;
-    cout << "PT_path: " << fetch_plaintext_file_path() << std::endl;
+    cout << "PT_path: " << get_plaintext_file_path() << std::endl;
     return 0;
 }
