@@ -31,7 +31,7 @@ string custom_pwd(string &filesystem_path) {
   return pwd;
 }
 
-int user_features(string user_name, User_type user_type, uint8_t key, string filesystem_path) {
+int user_features(string user_name, User_type user_type, uint8_t* key, string filesystem_path) {
 
   cout << "=======================" << endl;
   cout << "Available commands are: \n" << endl;
@@ -560,7 +560,7 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
               // create file
               cout << "try creating file.. " << endl;
               string path = custom_pwd(filesystem_path);
-              mkfile(filename, contents);
+              encrypt_file(filename, contents, key);
             } else {
               cerr << "not a valid filename, try again" << endl;
             }
@@ -574,7 +574,7 @@ int user_features(string user_name, User_type user_type, uint8_t key, string fil
             // TODO - replace the system call with encryption fn
             // create file
             cout << "try creating file.. " << endl;
-            mkfile(filename, contents);
+            encrypt_file(filename, contents, key);
         } else {
             cerr << "not a valid filename, try again" << endl;
         }

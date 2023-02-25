@@ -10,10 +10,10 @@
 #include <fstream>
 #include <openssl/rand.h>
 #include <regex>
+#include "enc_consts.h"
 
 using namespace std;
 namespace fs = std::filesystem;
-const int KEY_SIZE = 32; //bytes
 
 // TODO: once the filesystem directory and logic is created,
 // TODO: use correct admin_root_path and user_root_path
@@ -53,7 +53,6 @@ string normalize_path(string path) {
   }
   return path;
 }
-
 
 bool is_valid_path(string &directory_name, const fs::path& root_path) {
   directory_name = normalize_path(directory_name);
@@ -282,14 +281,14 @@ void add_enc_key_to_metadata(string username){
     file.close();
 }
 
-uint8_t read_enc_key_from_metadata(string username){
+uint8_t* read_enc_key_from_metadata(string username){
     fstream file("metadata/" + username + "_key", ios::in | ios::binary);
     if (!file.is_open()) {
       std::cout << "Failed to read key from metadata" << std::endl;
     }
     uint8_t key[KEY_SIZE];
     file.read((char*)key, KEY_SIZE);
-    return *key;
+    return key;
 }
 
 bool contains_backticks(const string& input) {

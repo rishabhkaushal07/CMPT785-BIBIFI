@@ -4,6 +4,7 @@
 #include "headers/user_type.h"
 #include "headers/user_authentication.h"
 #include "headers/user_features.h"
+#include "headers/encryption.h"
 
 using namespace std;
 
@@ -30,7 +31,7 @@ int main(int argc, char *argv[]) {
         user_type = user;
 
       // read user's enc key from metadata file
-      uint8_t key = read_enc_key_from_metadata(user_name);
+      uint8_t* key = read_enc_key_from_metadata(user_name);
       user_features(user_name, user_type, key, filesystem_path);
     }
   }
@@ -55,7 +56,7 @@ int main(int argc, char *argv[]) {
     umask(old_umask); // Restore the original umask value
     string user_name = "admin";
     add_user(user_name,true);
-    uint8_t key = read_enc_key_from_metadata(user_name);
+    uint8_t* key = read_enc_key_from_metadata(user_name);
     user_features(user_name, admin, key, filesystem_path);
   }
 }
