@@ -16,14 +16,15 @@ string encrypt_filename(string filename);
 string decrypt_filename(string randomized_name);
 
 string Randomizer(int ch) {
-    // For randomised string generation
-    const string letters = "abcdefghijklmnopqrstuvwxyz";
-    stringstream random_string;
-    srand(static_cast<unsigned int>(time(nullptr)));
-    for (int i = 0; i < ch; ++i) {
-        random_string << letters[rand() % letters.length()];
-    }
-    return random_string.str();
+    srand(time(NULL));
+    char letters[26] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g',
+                          'h', 'i', 'j', 'k', 'l', 'm', 'n',
+                          'o', 'p', 'q', 'r', 's', 't', 'u',
+                          'v', 'w', 'x', 'y', 'z' };
+    string random_string = "";
+    for (int i = 0; i<ch; i++)
+        random_string = random_string + letters[rand() % 26];
+    return random_string;
 }
 
 json read_metadata_json(){
@@ -106,7 +107,6 @@ string get_plaintext_file_path(string randomized_filepath){
 }
 
 string encrypt_filename(string filename){
-    srand(time(NULL));
     //Generating the random string for filename
     string randomized_filename = Randomizer(10);
     //Reading the metadata JSON for inserting the randomizer-filename mapping
