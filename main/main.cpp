@@ -31,8 +31,7 @@ int main(int argc, char *argv[]) {
         user_type = user;
 
       // read user's enc key from metadata file
-      uint8_t* key = read_enc_key_from_metadata(user_name);
-      user_features(user_name, user_type, key, filesystem_path);
+      user_features(user_name, user_type, read_enc_key_from_metadata(user_name, ""), filesystem_path);
     }
   }
   else{
@@ -59,8 +58,7 @@ int main(int argc, char *argv[]) {
     }
     umask(old_umask); // Restore the original umask value
     string user_name = "admin";
-    add_user(user_name,true);
-    uint8_t* key = read_enc_key_from_metadata(user_name, "");
-    user_features(user_name, admin, key, filesystem_path);
+    add_user(user_name, filesystem_path, true);
+    user_features(user_name, admin, read_enc_key_from_metadata(user_name, ""), filesystem_path);
   }
 }

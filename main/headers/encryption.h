@@ -13,15 +13,16 @@
 using namespace std;
 
 void handleErrors(void);
-void encrypt_file(string filePath, string content, unsigned char *key);
-string decrypt_file(string filePath, unsigned char *key);
+void encrypt_file(string filePath, string content, vector<uint8_t> keyin);
+string decrypt_file(string filePath, vector<uint8_t> keyin);
 
 void handleErrors(void) {
     ERR_print_errors_fp(stderr);
     abort();
 }
 
-void encrypt_file(string filePath, string content, unsigned char *key) {
+void encrypt_file(string filePath, string content, vector<uint8_t> keyin) {
+    unsigned char* key = keyin.data();
     // generate random iv for each file
     uint8_t iv[IV_SIZE];
     RAND_bytes(iv, sizeof(iv));
@@ -103,7 +104,8 @@ void encrypt_file(string filePath, string content, unsigned char *key) {
     output_file.close();
 }
 
-string decrypt_file(string filePath, unsigned char *key) {
+string decrypt_file(string filePath, vector<uint8_t> keyin) {
+    unsigned char* key = keyin.data();
     string ptoutput = "";
     // Open the input file for reading.
     // ToDo: Invoke the filename_decryption function to get the mapping of the plaintext filename

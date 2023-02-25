@@ -10,13 +10,10 @@
 #include <fstream>
 #include <openssl/rand.h>
 #include <regex>
-
-#include "user_type.h"
-#include "user_features.h"
+#include "enc_consts.h"
 
 using namespace std;
 namespace fs = std::filesystem;
-const int KEY_SIZE = 32; //bytes
 
 // TODO: once the filesystem directory and logic is created,
 // TODO: use correct admin_root_path and user_root_path
@@ -56,7 +53,6 @@ string normalize_path(string path) {
   }
   return path;
 }
-
 
 bool is_valid_path(string &directory_name, const fs::path& root_path) {
   directory_name = normalize_path(directory_name);
@@ -271,9 +267,9 @@ bool is_valid_path(string &directory_name, const fs::path& root_path) {
 
 }
 
-void add_enc_key_to_metadata(string username){
+void add_enc_key_to_metadata(string username, string path){
     // create metadata key file if not present
-    fstream file("metadata/" + username + "_key", ios::out | ios::binary);
+    fstream file(path + "/metadata/" + username + "_key", ios::out | ios::binary);
     if (!file.is_open()) {
         std::cout << "Failed to create user metadata key file" << std::endl;
         return;
@@ -285,18 +281,23 @@ void add_enc_key_to_metadata(string username){
     file.close();
 }
 
-uint8_t* read_enc_key_from_metadata(string username){
-    fstream file("metadata/" + username + "_key", ios::in | ios::binary);
+vector<uint8_t> read_enc_key_from_metadata(string username, string path) {
+    string metadata_path = (path.size() > 0) ? path : "metadata/";
+    fstream file(metadata_path + username + "_key", ios::in | ios::binary);
     if (!file.is_open()) {
-      std::cout << "Failed to read key from metadata" << std::endl;
+      cout << "Failed to read key from metadata" << endl;
+      // return an empty vector if the file failed to open
+      return vector<uint8_t>{};
     }
-    uint8_t key[KEY_SIZE];
-    file.read((char*)key, KEY_SIZE);
+    vector<uint8_t> key(KEY_SIZE);
+    file.read(reinterpret_cast<char*>(key.data()), key.size());
     return key;
 }
+
 bool contains_backticks(const string& input) {
 
-  if (input.find('`') != std::string::npos) {
+  cout << input<<endl;
+  if (input.find('`') == std::string::npos) {
     // `backtick` found
     return false;
   }
@@ -304,7 +305,6 @@ bool contains_backticks(const string& input) {
   // `backtick` not found
   return true;
 }
-
 
 bool is_valid_filename(const string& filename) {
 
@@ -322,5 +322,24 @@ bool is_valid_filename(const string& filename) {
 
 }
 
+void create_init_fs_for_user(string username, string path) {
+  mode_t old_umask = umask(0); // to ensure the following modes get set
+  mode_t mode = 0700;
+  string u_folder = path + "/filesystem/" + username;
+  if (mkdir(u_folder.c_str(), mode) != 0) {
+    std::cerr << "Error creating root folder for " << username << std::endl;
+  }
+  else {
+    u_folder = path + "/filesystem/" + username + "/personal";
+    if (mkdir(u_folder.c_str(), mode) != 0) {
+      std::cerr << "Error creating personal folder for " << username << std::endl;
+    }
+    u_folder = path + "/filesystem/" + username + "/shared";
+    if (mkdir(u_folder.c_str(), mode) != 0) {
+      std::cerr << "Error creating shared folder for " << username << std::endl;
+    }
+  }
+  umask(old_umask); // Restore the original umask value
+}
 
 #endif // CMPT785_BIBIFI_HELPER_FUNCTIONS_H
