@@ -6,18 +6,18 @@
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
-#include "headers/json.hpp"
+#include "json.hpp"
 using namespace std;
 using json = nlohmann::json;
 
 string Randomizer(int len);
-json read_metadata_json(void);
-string get_filename(string randomized_name);
-string get_randomized_name(string filename);
-string get_randomized_file_path(string filepath);
-string get_plaintext_file_path(string randomized_filepath);
-string encrypt_filename(string filename);
-string decrypt_filename(string randomized_name);
+json read_metadata_json(string path_to_metadata);
+string get_filename(string randomized_name, string path_to_metadata);
+string get_randomized_name(string filename, string path_to_metadata);
+string get_randomized_file_path(string filepath, string path_to_metadata);
+string get_plaintext_file_path(string randomized_filepath, string path_to_metadata);
+string encrypt_filename(string filename, string path_to_metadata);
+string decrypt_filename(string randomized_name, string path_to_metadata);
 
 string Randomizer(int len) {
     static random_device rd;
@@ -56,9 +56,9 @@ string get_filename(string randomized_filename, string path_to_metadata){
     return filename;
 }
 
-string get_randomized_name(string filename){
+string get_randomized_name(string filename, string path_to_metadata){
     // Create a JSON object
-    json obj = read_metadata_json();
+    json obj = read_metadata_json(path_to_metadata);
     string randomized_name;
 
     // Iterate over the JSON object and check the value of each key
@@ -71,7 +71,7 @@ string get_randomized_name(string filename){
     return randomized_name;
 }
 
-string get_randomized_file_path(string filepath){
+string get_randomized_file_path(string filepath, string path_to_metadata){
     char separator = '/';
     int i = 0;
     string randomized_path = "";
@@ -82,19 +82,19 @@ string get_randomized_file_path(string filepath){
             // Append the char to the temp string.
             s += filepath[i]; 
         } else {
-            temp = get_randomized_name(s);
+            temp = get_randomized_name(s, path_to_metadata);
             randomized_path = randomized_path+ "/" + temp;
             s.clear();
         }
         i++;
     }
     // Output the last stored word.
-    temp = get_randomized_name(s);
+    temp = get_randomized_name(s, path_to_metadata);
     randomized_path = randomized_path+ "/" + temp;
     return randomized_path;
 }
 
-string get_plaintext_file_path(string randomized_filepath){
+string get_plaintext_file_path(string randomized_filepath, string path_to_metadata){
     char separator = '/';
     int i = 1;
     string plaintext_path = "";
@@ -105,14 +105,14 @@ string get_plaintext_file_path(string randomized_filepath){
             // Append the char to the temp string.
             s += randomized_filepath[i]; 
         } else {
-            temp = get_filename(s);
+            temp = get_filename(s, path_to_metadata);
             plaintext_path = plaintext_path + "/" + temp;
             s.clear();
         }
         i++;
     }
     // Output the last stored word.
-    temp = get_filename(s);
+    temp = get_filename(s, path_to_metadata);
     plaintext_path = plaintext_path + "/" + temp;
     return plaintext_path;
 }
@@ -135,10 +135,10 @@ string encrypt_filename(string filename, string path_to_metadata){
     return randomized_filename;
 }
 
-string decrypt_filename(string randomized_filename){
+string decrypt_filename(string randomized_filename, string path_to_metadata){
     string filename;
     //Fetching the filename from the metadata JSON file and returning the filename
-    filename = get_filename(randomized_filename);
+    filename = get_filename(randomized_filename, path_to_metadata);
     return filename;
 }
 

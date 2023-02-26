@@ -12,6 +12,7 @@
 #include "user_type.h"
 #include "helper_functions.h"
 #include "user_authentication.h"
+#include "randomizer_function.h"
 
 using namespace std;
 namespace fs = std::filesystem;
@@ -100,6 +101,17 @@ void check_if_shared(string filename, string filesystem_path, string content) {
 
   update_shared_files(usernames, filename, filesystem_path, content);
 
+}
+
+void make_directory(string directory_name, string &filesystem_path) {
+  if (directory_name.find('/') != string::npos) {
+      cout << "Directory name cannot contain /" << endl;
+  } else {
+    string path = custom_pwd(filesystem_path) + "/" + directory_name;
+    cout<<path<<endl;
+    string encrypted_name = encrypt_filename(directory_name, filesystem_path);
+    system(("mkdir " + encrypted_name).c_str());
+  }
 }
 
 int user_features(string user_name, User_type user_type, vector<uint8_t> key, string filesystem_path) {
@@ -449,7 +461,8 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
                     } else {
 
                       // create directory
-                      system(("mkdir " + directory_name).c_str());
+                      make_directory(directory_name, filesystem_path);
+                      // system(("mkdir " + directory_name).c_str());
 
                     }
 
@@ -457,7 +470,8 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
 
                     // like `going back one directory ..`
                     // create directory
-                    system(("mkdir " + directory_name).c_str());
+                    make_directory(directory_name, filesystem_path);
+                    // system(("mkdir " + directory_name).c_str());
 
                   } else {
 
@@ -551,7 +565,8 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
                         // else do not create it
                         // good thing is that system() automatically checks this
                         // so no need to explicitly check for it
-                        system(("mkdir " + directory_name).c_str());
+                        make_directory(directory_name, filesystem_path);
+                        // system(("mkdir " + directory_name).c_str());
 
                       }
 
@@ -578,7 +593,8 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
                 } else {
 
                   // directory doesn't exist, so create it
-                  system(("mkdir " + directory_name).c_str());
+                  make_directory(directory_name, filesystem_path);
+                  // system(("mkdir " + directory_name).c_str());
 
                 }
 
