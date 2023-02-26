@@ -310,14 +310,49 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
     istring_stream >> cmd;
 
     if (cmd == "cd") {
+
+      // Clear the input stream first, to avoid any un-intended issues with it
+      istring_stream.clear();
+
+      // set a global directory for starting in a clean state
+      directory_name = "/";
+
       // get the directory name from istring stream buffer
       istring_stream >> directory_name;
+
+      if(directory_name.empty()) {
+        // just `cd` is equivalent of `cd /` , so going to root directory.
+
+        // assign root name first to avoid issues with the emptiness of directory_name in the second run.
+        directory_name = "/";
+
+        // This should vary depending upon what kind of user is currently logged in
+        // cd / should take you to the current user’s root directory
+        // TODO: it appears root_path is getting set properly occasionaly, try `cd admin` and then `pwd` and then `mkdir folder1`
+        // TODO: we should change to `<root_path>` right away after logging in, root_path will change depending on who logs in
+        fs::current_path(root_path);
+
+        continue;
+      }
 
       if(contains_backticks(directory_name)) {
         cerr << "Error: directory name should not contain `backticks`, try again." << endl;
       } else {
         directory_name = normalize_path(directory_name);
         directory_name = get_encrypted_file_path(directory_name, filesystem_path);
+
+        // remove /
+        // this is to avoid any potential issues from get_encrypted_file_path() that appends / sometimes
+        if (directory_name.length() > 1) {
+          directory_name.erase(remove(directory_name.begin(), directory_name.end(), '/'), directory_name.end());
+        }
+
+        if(directory_name == ".") {
+            // like `cd .`
+            // do nothing and continue
+            continue;
+
+        }
 
         // construct a target (absolute) path from the directory name
         fs::path current_path = fs::current_path();
