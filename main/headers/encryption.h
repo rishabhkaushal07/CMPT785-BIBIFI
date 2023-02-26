@@ -13,15 +13,15 @@
 using namespace std;
 
 void handleErrors(void);
-void encrypt_file(string filePath, string content, vector<uint8_t> keyin, string path_to_metadata);
-string decrypt_file(string filePath, vector<uint8_t> keyin, string path_to_metadata);
+void encrypt_file(string filePath, string content, vector<uint8_t> keyin);
+string decrypt_file(string filePath, vector<uint8_t> keyin);
 
 void handleErrors(void) {
     ERR_print_errors_fp(stderr);
     abort();
 }
 
-void encrypt_file(string filePath, string content, vector<uint8_t> keyin, string path_to_metadata) {
+void encrypt_file(string filePath, string content, vector<uint8_t> keyin) {
     unsigned char* key = keyin.data();
     // generate random iv for each file
     uint8_t iv[IV_SIZE];
@@ -30,7 +30,7 @@ void encrypt_file(string filePath, string content, vector<uint8_t> keyin, string
     unsigned char tag[TAG_SIZE];
 
     // Generate the output file path.
-    string output_filepath = encrypt_filename(filePath,path_to_metadata);
+    string output_filepath = filePath;
 
     // Open the output file for writing.
     ofstream output_file(output_filepath);
@@ -106,7 +106,7 @@ string decrypt_file(string filePath, vector<uint8_t> keyin) {
     unsigned char* key = keyin.data();
     string ptoutput = "";
     // Open the input file for reading.
-    ifstream input_file(decrypt_filename(filePath, path_to_metadata));
+    ifstream input_file(filePath);
     if (!input_file) {
         throw ios_base::failure("Failed to open file: " + filePath);
     }
