@@ -56,7 +56,7 @@ int main(int argc, char *argv[]) {
       std::cerr << "Error creating filesystem." << std::endl;
       return 1;
     }
-    if (mkfile("metadata.json", "{\"test\":\"123\"}", mode) != 0) {
+    if (mkfile("metadata.json", "{\"test\":\"123\"}") != 0) {
       std::cerr << "Error creating metadata.json ." << std::endl;
       return 1;
     }
