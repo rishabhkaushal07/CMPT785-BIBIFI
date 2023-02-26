@@ -1,4 +1,5 @@
 #include <string.h>
+#include <random>
 #include <iostream>
 #include <fstream>
 #include <cstdlib>
@@ -6,25 +7,32 @@
 using namespace std;
 using json = nlohmann::json;
 
-// string Randomizer(int ch);
-// json read_metadata_json(void);
-// string get_filename(string randomized_name);
-// string get_randomized_name(string filename);
-// string get_randomized_file_path(string filepath);
-// string get_plaintext_file_path(string randomized_filepath);
-// string encrypt_filename(string filename);
-// string decrypt_filename(string randomized_name);
+string Randomizer(int len);
+json read_metadata_json(void);
+string get_filename(string randomized_name);
+string get_randomized_name(string filename);
+string get_randomized_file_path(string filepath);
+string get_plaintext_file_path(string randomized_filepath);
+string encrypt_filename(string filename);
+string decrypt_filename(string randomized_name);
 
-string Randomizer(int ch) {
-    srand(time(NULL));
-    char letters[26] = { 'a', 'b', 'c', 'd', 'e', 'f', 'g',
-                          'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                          'o', 'p', 'q', 'r', 's', 't', 'u',
-                          'v', 'w', 'x', 'y', 'z' };
-    string random_string = "";
-    for (int i = 0; i<ch; i++)
-        random_string = random_string + letters[rand() % 26];
-    return random_string;
+string Randomizer(int len) {
+    static random_device rd;
+    static mt19937 gen(rd());
+    static const char alphanum[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+
+    uniform_int_distribution<> distr(0, sizeof(alphanum) - 2);
+
+    string randomString;
+    randomString.reserve(len);
+
+    for (int i = 0; i < len; ++i) {
+        randomString += alphanum[distr(gen)];
+    }
+
+    return randomString;
 }
 
 json read_metadata_json(){
@@ -85,7 +93,7 @@ string get_randomized_file_path(string filepath){
 
 string get_plaintext_file_path(string randomized_filepath){
     char separator = '/';
-    int i = 0;
+    int i = 1;
     string plaintext_path = "";
     // Temporary string used to split the string.
     string s,temp; 
@@ -102,7 +110,7 @@ string get_plaintext_file_path(string randomized_filepath){
     }
     // Output the last stored word.
     temp = get_filename(s);
-    plaintext_path = plaintext_path + "/" + s;
+    plaintext_path = plaintext_path + "/" + temp;
     return plaintext_path;
 }
 
@@ -129,21 +137,4 @@ string decrypt_filename(string randomized_filename){
     //Fetching the filename from the metadata JSON file and returning the filename
     filename = get_filename(randomized_filename);
     return filename;
-}
-
-int main()
-{
-    string filename = "testfile.txt";
-    string random_name = encrypt_filename(filename);
-    cout << "Filename_encryption: " << random_name << endl;
-    cout << "Filename_decryption: " << decrypt_filename(random_name) << endl;
-    cout << "Get_filename: " << get_filename(random_name) << endl;
-    cout << "Get_random_name: " << get_randomized_name(filename) << endl;
-    encrypt_filename("dir1");
-    encrypt_filename("dir2");
-    string filepath = "dir1/dir2/testfile.txt";
-    string random_fp = get_randomized_file_path(filepath);
-    cout << "Randomized path: " << random_fp << endl;
-    cout << "PT_path: " << get_plaintext_file_path(random_fp) << endl;
-    return 0;
 }
