@@ -40,6 +40,10 @@ string Randomizer(int len) {
 
 json read_metadata_json(string path_to_metadata){
     ifstream metadata_file(path_to_metadata + "/metadata.json");
+    if (!metadata_file.is_open()) {
+        throw runtime_error("Failed to open metadata.json file");
+    }
+
     json metadata_json = json::parse(metadata_file);
     return metadata_json;
 }
@@ -47,6 +51,9 @@ json read_metadata_json(string path_to_metadata){
 string get_filename(string randomized_filename, string path_to_metadata){
     // Parsing JSON object
     ifstream metadata_file(path_to_metadata + "/metadata.json");
+    if (!metadata_file.is_open()) {
+        throw runtime_error("Failed to open metadata.json file");
+    }
     json metadata_json = json::parse(metadata_file);
     // Fetching randomized_filename filepath mapping
     if (metadata_json[randomized_filename] == nullptr) {
@@ -57,11 +64,6 @@ string get_filename(string randomized_filename, string path_to_metadata){
         decrypted_name.erase(0, delete_upto);
         return decrypted_name;
     }
-    // string filename = metadata_json[randomized_filename];
-    // TODO: error handling
-    // if (filename.empty())
-    //     handleErrors();
-    // return filename;
 }
 
 string get_randomized_name(string filename, string path_to_metadata){
@@ -130,6 +132,9 @@ string encrypt_filename(string filename, string path_to_metadata){
     string randomized_filename = Randomizer(10);
     //Reading the metadata JSON for inserting the randomizer-filename mapping
     ifstream metadata_file(path_to_metadata + "/metadata.json");
+    if (!metadata_file.is_open()) {
+        throw runtime_error("Failed to open metadata.json file");
+    }
     json metadata_json = json::parse(metadata_file);
     json input_json = json::object();
     input_json[randomized_filename] = filename;
@@ -153,6 +158,9 @@ string decrypt_filename(string randomized_filename, string path_to_metadata){
 void add_randomized_filename(string filename, string randomized_filename, string path_to_metadata){
     //Reading the metadata JSON for inserting the randomizer-filename mapping
     ifstream metadata_file(path_to_metadata + "/metadata.json");
+    if (!metadata_file.is_open()) {
+        throw runtime_error("Failed to open metadata.json file");
+    }
     json metadata_json = json::parse(metadata_file);
     json input_json = json::object();
     input_json[randomized_filename] = filename;
@@ -160,7 +168,9 @@ void add_randomized_filename(string filename, string randomized_filename, string
     //Inserting the new mapping into the metadata JSON file
     metadata_json.update(input_json.begin(), input_json.end(), true);
     ofstream file(path_to_metadata + "/metadata.json");
-
+    if (!file.is_open()) {
+        throw runtime_error("Failed to open metadata.json file for writing");
+    }
     //Writing into the metadata JSON file and returning the random string
     file << metadata_json;
 }
