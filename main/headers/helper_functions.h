@@ -12,14 +12,12 @@
 #include <regex>
 #include "enc_consts.h"
 
+#include "randomizer_function.h"
+
 using namespace std;
 namespace fs = std::filesystem;
 
-// TODO: once the filesystem directory and logic is created,
-// TODO: use correct admin_root_path and user_root_path
-
-// TODO: delete this function once the mkfile cmd starts to use encrypt
-void mkfile(std::string filename, std::string contents) {
+int mkfile(std::string filename, std::string contents) {
 
   ofstream file;
   file.open(filename);
@@ -27,8 +25,10 @@ void mkfile(std::string filename, std::string contents) {
     file << contents;
     cout << "Success: File created successfully!" << endl;
     file.close();
+    return 0;
   } else {
     cerr << "Error: Could not create file!" << endl;
+    return 1;
   }
 
 }
@@ -309,7 +309,7 @@ bool contains_backticks(const string& input) {
 bool is_valid_filename(const string& filename) {
 
   // reference: https://stackoverflow.com/questions/11794144/regular-expression-for-valid-filename
-  regex pattern("^[a-zA-Z0-9](?:[a-zA-Z0-9 ._-]*[a-zA-Z0-9])?\\.[a-zA-Z0-9_-]+$");
+  regex pattern("^[a-zA-Z0-9](?:[a-zA-Z0-9 ._-]*[a-zA-Z0-9])?(\\.(?!$)[a-zA-Z0-9_-]+)+$|^([a-zA-Z0-9](?:[a-zA-Z0-9 ._-]*[a-zA-Z0-9])?)$");
 
   int max_length = 255;
 
@@ -322,19 +322,41 @@ bool is_valid_filename(const string& filename) {
 
 }
 
+bool check_if_personal_directory(string username, string pwd, string filesystem_path) {
+  string randomized_user_directory = get_randomized_name("/filesystem/" + username, filesystem_path);
+  string randomized_personal_directory = get_randomized_name("/filesystem/" + randomized_user_directory + "/personal", filesystem_path);
+  string authorized_path_to_write = "/filesystem/" + randomized_user_directory + "/" + randomized_personal_directory;
+
+  if (pwd.length() < authorized_path_to_write.length()) {
+    return false;
+  }
+
+  pwd.erase(authorized_path_to_write.length(), pwd.length());
+
+  if (authorized_path_to_write == pwd) {
+    return true;
+  }
+
+  return false;
+}
+
 void create_init_fs_for_user(string username, string path) {
   mode_t old_umask = umask(0); // to ensure the following modes get set
   mode_t mode = 0700;
-  string u_folder = path + "/filesystem/" + username;
+
+  string encrypted_username = encrypt_filename("/filesystem/" + username, path);
+  string u_folder = path + "/filesystem/" + encrypted_username;
   if (mkdir(u_folder.c_str(), mode) != 0) {
     std::cerr << "Error creating root folder for " << username << std::endl;
   }
   else {
-    u_folder = path + "/filesystem/" + username + "/personal";
+    string encrypted_p_folder = encrypt_filename("/filesystem/" + encrypted_username + "/personal", path);
+    u_folder = path + "/filesystem/" + encrypted_username + "/" + encrypted_p_folder;
     if (mkdir(u_folder.c_str(), mode) != 0) {
       std::cerr << "Error creating personal folder for " << username << std::endl;
     }
-    u_folder = path + "/filesystem/" + username + "/shared";
+    string encrypted_s_folder = encrypt_filename("/filesystem/" + encrypted_username + "/shared", path);
+    u_folder = path + "/filesystem/" + encrypted_username + "/" + encrypted_s_folder;
     if (mkdir(u_folder.c_str(), mode) != 0) {
       std::cerr << "Error creating shared folder for " << username << std::endl;
     }
