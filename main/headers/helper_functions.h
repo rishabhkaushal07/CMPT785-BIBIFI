@@ -12,6 +12,8 @@
 #include <regex>
 #include "enc_consts.h"
 
+#include "randomizer_function.h"
+
 using namespace std;
 namespace fs = std::filesystem;
 
