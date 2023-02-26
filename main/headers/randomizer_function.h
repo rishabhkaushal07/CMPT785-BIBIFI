@@ -50,7 +50,7 @@ string get_filename(string randomized_filename, string path_to_metadata){
     json metadata_json = json::parse(metadata_file);
     // Fetching randomized_filename filepath mapping
     if (metadata_json[randomized_filename] == nullptr) {
-        return "Something went wrong!";
+        return "";
     } else {
         string decrypted_name = metadata_json[randomized_filename];
         int delete_upto = decrypted_name.find_last_of('/') + 1;
@@ -148,6 +148,21 @@ string decrypt_filename(string randomized_filename, string path_to_metadata){
     //Fetching the filename from the metadata JSON file and returning the filename
     filename = get_filename(randomized_filename, path_to_metadata);
     return filename;
+}
+
+void add_randomized_filename(string filename, string randomized_filename, string path_to_metadata){
+    //Reading the metadata JSON for inserting the randomizer-filename mapping
+    ifstream metadata_file(path_to_metadata + "/metadata.json");
+    json metadata_json = json::parse(metadata_file);
+    json input_json = json::object();
+    input_json[randomized_filename] = filename;
+
+    //Inserting the new mapping into the metadata JSON file
+    metadata_json.update(input_json.begin(), input_json.end(), true);
+    ofstream file(path_to_metadata + "/metadata.json");
+
+    //Writing into the metadata JSON file and returning the random string
+    file << metadata_json;
 }
 
 #endif // CMPT785_BIBIFI_RANDOMIZER_FUNCTION_H

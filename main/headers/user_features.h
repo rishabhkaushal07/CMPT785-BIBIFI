@@ -46,10 +46,12 @@ void add_contents_to_file(string filename, string filepath, string content) {
 }
 
 void share_file(vector<uint8_t> key, string username, string filename, string filesystem_path) {
+  string randomized_filename = get_randomized_name(custom_pwd(filesystem_path) + "/" + filename, filesystem_path);
+
   // check if file exists
-  if (!fs::exists(filename)) {
-      cout << "File does not exist." << endl;
-      return;
+  if (!fs::exists(randomized_filename)) {
+    cout << "File does not exist." << endl;
+    return;
   }
 
   // fetch user list and check is username exists
@@ -70,36 +72,45 @@ void share_file(vector<uint8_t> key, string username, string filename, string fi
     return;
   }
 
-  string content = decrypt_file(filename, key);
-  string share_user_path = filesystem_path + "/filesystem/" + username + "/shared/" + filename;
+  string randomized_user_directory = get_randomized_name("/filesystem/" + username, filesystem_path);
+  string randomized_shared_directory = get_randomized_name("/filesystem/" + randomized_user_directory + "/shared", filesystem_path);
+
+  string content = decrypt_file(randomized_filename, key);
+  string share_user_path = filesystem_path + "/filesystem/" + randomized_user_directory + "/" + randomized_shared_directory + "/" + randomized_filename;
   vector<uint8_t> share_key = read_enc_key_from_metadata(username, filesystem_path + "/metadata/");
+  string filename_key = "/filesystem/" + randomized_user_directory + "/" + randomized_shared_directory + "/" + filename;
+  add_randomized_filename(filename_key, randomized_filename, filesystem_path);
   encrypt_file(share_user_path, content, share_key);
 
   string shared_data_path = filesystem_path + "/shared_files";
-  add_contents_to_file(filename, shared_data_path, username);
+  add_contents_to_file(randomized_filename, shared_data_path, username);
 }
 
-void update_shared_files(vector<string> usernames, string filename, string filesystem_path, string content) {
+void update_shared_files(vector<string> usernames, string randomized_filename, string filesystem_path, string content) {
   for (const string& username : usernames) {
-    string share_user_path = filesystem_path + "/filesystem/" + username + "/shared/" + filename;
+    string randomized_user_directory = get_randomized_name("/filesystem/" + username, filesystem_path);
+    string randomized_shared_directory = get_randomized_name("/filesystem/" + randomized_user_directory + "/shared", filesystem_path);
+    string share_user_path = filesystem_path + "/filesystem/" + randomized_user_directory + "/" + randomized_shared_directory + "/" + randomized_filename;
     vector<uint8_t> share_key = read_enc_key_from_metadata(username, filesystem_path + "/metadata/");
     encrypt_file(share_user_path, content, share_key);
   }
 }
 
 void check_if_shared(string filename, string filesystem_path, string content) {
-  vector<string> usernames;
-  string filepath = filesystem_path + "/shared_files/" + filename;
-  if (fs::exists(filepath)) {
-      ifstream file(filepath);
-      string line;
-      while (getline(file, line)) {
-          usernames.push_back(line);
-      }
-      file.close();
-  } 
+  string randomized_filename = get_randomized_name(custom_pwd(filesystem_path) + "/" + filename, filesystem_path);
 
-  update_shared_files(usernames, filename, filesystem_path, content);
+  vector<string> usernames;
+  string filepath = filesystem_path + "/shared_files/" + randomized_filename;
+  if (fs::exists(filepath)) {
+    ifstream file(filepath);
+    string line;
+    while (getline(file, line)) {
+        usernames.push_back(line);
+    }
+    file.close();
+
+    update_shared_files(usernames, randomized_filename, filesystem_path, content);
+  } 
 }
 
 void make_directory(string directory_name, string &filesystem_path) {
@@ -117,6 +128,35 @@ void make_file(string filename, string contents, vector<uint8_t> key, string fil
   string encrypted_name = encrypt_filename(path, filesystem_path);
   encrypt_file(encrypted_name, contents, key);
   check_if_shared(encrypted_name, filesystem_path, contents);
+}
+
+string get_decrypted_file_path(string path, string filesystem_path) {
+  size_t pos = 0;
+  string delimiter = "/";
+  vector<string> filenames;
+  if (path[0] == '/') {
+    path = path.substr(1);
+  }
+  while ((pos = path.find(delimiter)) != string::npos) {
+      string name = path.substr(0, pos);
+      if (name == "filesystem" ) {
+        filenames.push_back(name);
+        path.erase(0, pos + delimiter.length());
+        continue;
+      }
+      string decrypted = get_filename(name, filesystem_path);
+      filenames.push_back(decrypted);
+      path.erase(0, pos + delimiter.length());
+  }
+  string decrypted = get_filename(path, filesystem_path);
+  filenames.push_back(decrypted);
+
+  string decrypted_file_path = "";
+  for (const auto& name : filenames) {
+    decrypted_file_path = decrypted_file_path + "/" + name;
+  }
+
+  return decrypted_file_path;
 }
 
 string get_encrypted_file_path(string path, string filesystem_path) {
@@ -154,7 +194,6 @@ string get_encrypted_file_path(string path, string filesystem_path) {
     encrypted_file_path = encrypted_file_path + name + "/";
   }
 
-  cout<<"PATH == "<<encrypted_file_path<<endl;
   return encrypted_file_path;
 }
 
@@ -189,7 +228,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
   string input_feature, cmd, filename, username, directory_name, contents;
 
   do {
-    cout << user_name << " " << custom_pwd(filesystem_path) << "> ";
+    cout << user_name << " " << get_decrypted_file_path(custom_pwd(filesystem_path), filesystem_path) << "> ";
     // get command from the user
     getline(std::cin, input_feature);
 
@@ -333,7 +372,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         }
       }
     } else if (cmd == "pwd") {
-      string pwd = custom_pwd(filesystem_path);
+      string pwd = get_decrypted_file_path(custom_pwd(filesystem_path), filesystem_path);
       cout << pwd << endl;
     } else if (cmd == "ls") {
       string path = fs::current_path();
@@ -354,7 +393,6 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         }
 
         fs::file_status status = fs::status(entry_path);
-        cout << " file = " << entry_path << endl;
         string decrypted_name = decrypt_filename(entry_path, filesystem_path);
         switch (status.type()) {
           case fs::file_type::directory: {
@@ -371,11 +409,16 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
     } else if (cmd == "cat") {
       istring_stream >> filename;
       if (filename.empty()) {
-        cout << "filename not provided";
+        cout << "Filename not provided." << endl;
       } else {
         string path = custom_pwd(filesystem_path) + "/" + filename;
         string encrypted_name = get_randomized_name(path, filesystem_path);
-        cout << decrypt_file(encrypted_name, key) << endl;
+
+        if (fs::exists(encrypted_name)) {
+          cout << decrypt_file(encrypted_name, key) << endl;
+        } else {
+          cout << "File does not exist." << endl;
+        }
       }
     } else if (cmd == "share") {
       string share_username;
