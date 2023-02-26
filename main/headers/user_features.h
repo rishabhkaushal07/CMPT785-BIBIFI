@@ -214,9 +214,10 @@ string get_encrypted_file_path(string path, string filesystem_path) {
   if (path == ".." || path == ".") {
     filenames.push_back(path);
   } else {
-    filenames.push_back(get_randomized_name(key_path + "/" + path, filesystem_path));
+    string randomized_name = get_randomized_name(key_path + "/" + path, filesystem_path);
+    if (!randomized_name.empty())
+      filenames.push_back(randomized_name);
   }
-
   string encrypted_file_path = "";
   for (const auto& name : filenames) {
     encrypted_file_path = encrypted_file_path + name + "/";
@@ -286,7 +287,6 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         fs::path relative_path = fs::relative(target_path, root_path);
         fs::path resolved_root = fs::absolute(root_path);
         fs::path resolved_target = fs::absolute(target_path);
-
         if (target_path.has_relative_path()) {
           if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
             // checking this before because lexically_relative errors if the dir doesn't exist
