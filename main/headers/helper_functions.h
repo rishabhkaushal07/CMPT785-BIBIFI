@@ -296,7 +296,6 @@ vector<uint8_t> read_enc_key_from_metadata(string username, string path) {
 
 bool contains_backticks(const string& input) {
 
-  cout << input<<endl;
   if (input.find('`') == std::string::npos) {
     // `backtick` found
     return false;
