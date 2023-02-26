@@ -1,3 +1,6 @@
+#ifndef CMPT785_BIBIFI_RANDOMIZER_FUNCTION_H
+#define CMPT785_BIBIFI_RANDOMIZER_FUNCTION_H
+
 #include <string.h>
 #include <random>
 #include <iostream>
@@ -35,15 +38,15 @@ string Randomizer(int len) {
     return randomString;
 }
 
-json read_metadata_json(){
-    ifstream metadata_file("metadata.json");
+json read_metadata_json(string path_to_metadata){
+    ifstream metadata_file(path_to_metadata + "/metadata.json");
     json metadata_json = json::parse(metadata_file);
     return metadata_json;
 }
 
-string get_filename(string randomized_filename){
+string get_filename(string randomized_filename, string path_to_metadata){
     // Parsing JSON object
-    ifstream metadata_file("metadata.json");
+    ifstream metadata_file(path_to_metadata + "/metadata.json");
     json metadata_json = json::parse(metadata_file);
     // Fetching randomized_filename filepath mapping
     string filename = metadata_json[randomized_filename];
@@ -114,18 +117,18 @@ string get_plaintext_file_path(string randomized_filepath){
     return plaintext_path;
 }
 
-string encrypt_filename(string filename){
+string encrypt_filename(string filename, string path_to_metadata){
     //Generating the random string for filename
     string randomized_filename = Randomizer(10);
     //Reading the metadata JSON for inserting the randomizer-filename mapping
-    ifstream metadata_file("metadata.json");
+    ifstream metadata_file(path_to_metadata + "/metadata.json");
     json metadata_json = json::parse(metadata_file);
     json input_json = json::object();
     input_json[randomized_filename] = filename;
 
     //Inserting the new mapping into the metadata JSON file
     metadata_json.update(input_json.begin(), input_json.end(), true);
-    ofstream file("metadata.json");
+    ofstream file(path_to_metadata + "/metadata.json");
 
     //Writing into the metadata JSON file and returning the random string
     file << metadata_json;
@@ -138,3 +141,5 @@ string decrypt_filename(string randomized_filename){
     filename = get_filename(randomized_filename);
     return filename;
 }
+
+#endif // CMPT785_BIBIFI_RANDOMIZER_FUNCTION_H
