@@ -183,7 +183,7 @@ string get_decrypted_file_path(string path, string filesystem_path) {
   }
   while ((pos = path.find(delimiter)) != string::npos) {
       string name = path.substr(0, pos);
-      if (name == "filesystem" ) {
+      if (name == "filesystem") {
         filenames.push_back(name);
         path.erase(0, pos + delimiter.length());
         continue;
@@ -192,8 +192,12 @@ string get_decrypted_file_path(string path, string filesystem_path) {
       filenames.push_back(decrypted);
       path.erase(0, pos + delimiter.length());
   }
-  string decrypted = get_filename(path, filesystem_path);
-  filenames.push_back(decrypted);
+  if (path == "filesystem") {
+    filenames.push_back(path);
+  } else {
+    string decrypted = get_filename(path, filesystem_path);
+    filenames.push_back(decrypted);
+  }
 
   string decrypted_file_path = "";
   for (const auto& name : filenames) {
