@@ -39,7 +39,7 @@ string Randomizer(int len) {
 }
 
 json read_metadata_json(string path_to_metadata){
-    ifstream metadata_file(path_to_metadata + "/metadata.json");
+    ifstream metadata_file(path_to_metadata + "metadata/metadata.json");
     if (!metadata_file.is_open()) {
         throw runtime_error("Failed to open metadata.json file");
     }
@@ -50,7 +50,7 @@ json read_metadata_json(string path_to_metadata){
 
 string get_filename(string randomized_filename, string path_to_metadata){
     // Parsing JSON object
-    ifstream metadata_file(path_to_metadata + "/metadata.json");
+    ifstream metadata_file(path_to_metadata + "metadata/metadata.json");
     if (!metadata_file.is_open()) {
         throw runtime_error("Failed to open metadata.json file");
     }
@@ -131,7 +131,7 @@ string encrypt_filename(string filename, string path_to_metadata){
     //Generating the random string for filename
     string randomized_filename = Randomizer(10);
     //Reading the metadata JSON for inserting the randomizer-filename mapping
-    ifstream metadata_file(path_to_metadata + "/metadata.json");
+    ifstream metadata_file(path_to_metadata + "metadata/metadata.json");
     if (!metadata_file.is_open()) {
         throw runtime_error("Failed to open metadata.json file");
     }
@@ -141,7 +141,7 @@ string encrypt_filename(string filename, string path_to_metadata){
 
     //Inserting the new mapping into the metadata JSON file
     metadata_json.update(input_json.begin(), input_json.end(), true);
-    ofstream file(path_to_metadata + "/metadata.json");
+    ofstream file(path_to_metadata + "metadata/metadata.json");
 
     //Writing into the metadata JSON file and returning the random string
     file << metadata_json;
@@ -157,7 +157,7 @@ string decrypt_filename(string randomized_filename, string path_to_metadata){
 
 void add_randomized_filename(string filename, string randomized_filename, string path_to_metadata){
     //Reading the metadata JSON for inserting the randomizer-filename mapping
-    ifstream metadata_file(path_to_metadata + "/metadata.json");
+    ifstream metadata_file(path_to_metadata + "metadata/metadata.json");
     if (!metadata_file.is_open()) {
         throw runtime_error("Failed to open metadata.json file");
     }
@@ -167,7 +167,7 @@ void add_randomized_filename(string filename, string randomized_filename, string
 
     //Inserting the new mapping into the metadata JSON file
     metadata_json.update(input_json.begin(), input_json.end(), true);
-    ofstream file(path_to_metadata + "/metadata.json");
+    ofstream file(path_to_metadata + "metadata/metadata.json");
     if (!file.is_open()) {
         throw runtime_error("Failed to open metadata.json file for writing");
     }

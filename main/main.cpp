@@ -52,14 +52,25 @@ int main(int argc, char *argv[]) {
       std::cerr << "Error creating shared_files directory." << std::endl;
       return 1;
     }
-    if (mkfile("metadata.json", "{\"test\":\"123\"}") != 0) {
-      std::cerr << "Error creating metadata.json ." << std::endl;
-      return 1;
-    }
+    // if (mkfile("metadata.json", "{\"test\":\"123\"}") != 0) {
+    //   std::cerr << "Error creating metadata.json ." << std::endl;
+    //   return 1;
+    // }
     if (mkdir("filesystem", mode) != 0) {
       std::cerr << "Error creating filesystem." << std::endl;
       return 1;
     }
+
+    string metadata_path = "metadata/metadata.json";
+    ofstream metadata_file(metadata_path);
+    if (metadata_file) {
+        // Write your JSON data to the file here
+        metadata_file << "{\"test\":\"123\"}";
+        metadata_file.close();
+    } else {
+    std::cerr << "Error creating metadata.json" << std::endl;
+    return 1;
+}
 
     umask(old_umask); // Restore the original umask value
     string user_name = "admin";
