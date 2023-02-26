@@ -49,11 +49,19 @@ string get_filename(string randomized_filename, string path_to_metadata){
     ifstream metadata_file(path_to_metadata + "/metadata.json");
     json metadata_json = json::parse(metadata_file);
     // Fetching randomized_filename filepath mapping
-    string filename = metadata_json[randomized_filename];
+    if (metadata_json[randomized_filename] == nullptr) {
+        return "Something went wrong!";
+    } else {
+        string decrypted_name = metadata_json[randomized_filename];
+        int delete_upto = decrypted_name.find_last_of('/') + 1;
+        decrypted_name.erase(0, delete_upto);
+        return decrypted_name;
+    }
+    // string filename = metadata_json[randomized_filename];
     // TODO: error handling
     // if (filename.empty())
     //     handleErrors();
-    return filename;
+    // return filename;
 }
 
 string get_randomized_name(string filename, string path_to_metadata){
