@@ -21,7 +21,7 @@ namespace fs = std::filesystem;
 // TODO: use correct admin_root_path and user_root_path
 
 // TODO: delete this function once the mkfile cmd starts to use encrypt
-void mkfile(std::string filename, std::string contents) {
+int mkfile(std::string filename, std::string contents) {
 
   ofstream file;
   file.open(filename);
@@ -29,8 +29,10 @@ void mkfile(std::string filename, std::string contents) {
     file << contents;
     cout << "Success: File created successfully!" << endl;
     file.close();
+    return 0;
   } else {
     cerr << "Error: Could not create file!" << endl;
+    return 1;
   }
 
 }
