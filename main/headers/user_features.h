@@ -455,7 +455,11 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
 
         if (directory_name.empty()) {
             cout << "directory_name not provided";
-        } else if (directory_name == "." || directory_name == "..") {
+        }  
+        else if (directory_name.compare("filesystem") == 0) {
+          cout << "directory_name cannot be \"filesystem\"";
+        }
+        else if (directory_name == "." || directory_name == "..") {
             // . and .. directories always exist - try `ls -alh` to see all the dirs
             cerr << "Directory already exists." << endl;
         } else {
