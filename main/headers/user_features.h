@@ -143,13 +143,18 @@ string get_encrypted_file_path(string path, string filesystem_path) {
       key_path = key_path + "/" + randomized;
       path.erase(0, pos + delimiter.length());
   }
-  filenames.push_back(get_randomized_name(key_path + "/" + path, filesystem_path));
+  if (path == ".." || path == ".") {
+    filenames.push_back(path);
+  } else {
+    filenames.push_back(get_randomized_name(key_path + "/" + path, filesystem_path));
+  }
 
   string encrypted_file_path = "";
   for (const auto& name : filenames) {
     encrypted_file_path = encrypted_file_path + name + "/";
   }
 
+  cout<<"PATH == "<<encrypted_file_path<<endl;
   return encrypted_file_path;
 }
 

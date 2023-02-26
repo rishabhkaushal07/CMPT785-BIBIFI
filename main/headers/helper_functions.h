@@ -17,10 +17,6 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-// TODO: once the filesystem directory and logic is created,
-// TODO: use correct admin_root_path and user_root_path
-
-// TODO: delete this function once the mkfile cmd starts to use encrypt
 int mkfile(std::string filename, std::string contents) {
 
   ofstream file;
