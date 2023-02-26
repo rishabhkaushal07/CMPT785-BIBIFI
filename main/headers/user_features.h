@@ -50,7 +50,7 @@ void share_file(vector<uint8_t> key, string username, string filename, string fi
 
   // check if file exists
   if (!fs::exists(randomized_filename)) {
-    cout << "File does not exist." << endl;
+    cout << "File does not exist" << endl;
     return;
   }
 
@@ -166,7 +166,7 @@ void make_directory(string directory_name, string &filesystem_path, string usern
       system(("mkdir " + encrypted_name).c_str());
     }
     else{
-      cerr << "Directory already exists." << endl;
+      cerr << "Directory already exists" << endl;
     }
   }
 }
@@ -174,6 +174,11 @@ void make_directory(string directory_name, string &filesystem_path, string usern
 void make_file(string filename, string contents, vector<uint8_t> key, string filesystem_path, string username) {
   if (!check_if_personal_directory(username, custom_pwd(filesystem_path), filesystem_path)) {
     cout << "Forbidden" << endl;
+    return;
+  }
+
+  if (filename.find('/') != string::npos) {
+    cout << "File name cannot contain /" << endl;
     return;
   }
 
@@ -469,7 +474,9 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
     } else if (cmd == "cat") {
       istring_stream >> filename;
       if (filename.empty()) {
-        cout << "Filename not provided." << endl;
+        cout << "File name not provided" << endl;
+      } else if (filename.find('/') != string::npos) {
+        cout << "File name cannot contain /" << endl;
       } else {
         string path = custom_pwd(filesystem_path) + "/" + filename;
         string encrypted_name = get_randomized_name(path, filesystem_path);
@@ -478,7 +485,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
           cout << decrypt_file(encrypted_name, key) << endl;
         } else {
           cout<<custom_pwd(filesystem_path) + "/" + filename<< endl;
-          cout << "File does not exist." << endl;
+          cout << "File does not exist" << endl;
         }
       }
     } else if (cmd == "share") {
@@ -486,14 +493,19 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
       istring_stream >> filename;
       istring_stream >> share_username;
 
-      share_file(key, share_username, filename, filesystem_path);
-    } else if (cmd == "mkdir") {
-      if (!check_if_personal_directory(user_name, custom_pwd(filesystem_path), filesystem_path)) {
-        cout << "Forbidden" << endl;
+      if (filename.find('/') != string::npos) {
+        cout << "File name cannot contain /" << endl;
       } else {
-      // create a new directory
+        share_file(key, share_username, filename, filesystem_path);
+      }
+    } else if (cmd == "mkdir") {
       istring_stream >> directory_name;
 
+      if (directory_name.find('/') != string::npos) {
+        cout << "Directory name cannot contain /" << endl;
+      } else if (!check_if_personal_directory(user_name, custom_pwd(filesystem_path), filesystem_path)) {
+        cout << "Forbidden" << endl;
+      } else {      
       if(contains_backticks(directory_name)) {
         cerr << "Error: directory name should not contain `backticks`, try again." << endl;
       } else {
@@ -512,12 +524,12 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         }
         else if (directory_name == "." || directory_name == "..") {
             // . and .. directories always exist - try `ls -alh` to see all the dirs
-            cerr << "Directory already exists." << endl;
+            cerr << "Directory already exists" << endl;
         } else {
             if (target_path.has_relative_path()) {
               if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
                 // If a directory with this name exists, print "Directory already exists"
-                cerr << "Directory already exists." << endl;
+                cerr << "Directory already exists" << endl;
               } else {
                 if(target_path.lexically_relative(root_path).native().front() == '.') {
                   if(directory_name == "." || directory_name == "..") {
@@ -538,55 +550,55 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
                     } else {
                       // if the directory path is outside the root path
                       // Warn and stay in the current directory
-                      cerr << "Directory is outside of the root directory." << endl;
+                      cerr << "Directory is outside of the root directory" << endl;
                     }
                   } else {
                     if (target_path == root_path) {
                       if (current_path == root_path) {
                         // like `mkdir .`  - so no need to change the directory
-                        cerr << "Directory already exists." << endl;
+                        cerr << "Directory already exists" << endl;
                       } else {
                         // like creating root path's dir
-                        cerr << "Directory already exists." << endl;
+                        cerr << "Directory already exists" << endl;
                       }
                     } else {
                       // if the directory path is outside the root path
                       // Warn and stay in the current directory
-                      cerr << "Directory is outside of the root directory." << endl;
+                      cerr << "Directory is outside of the root directory" << endl;
                     }
                   }
                 } else {
                   if (directory_name == "/") {
                     // mkdir /  means creating current user’s root directory
                     // but this should already exist so error out
-                    cerr << "Directory already exists." << endl;
+                    cerr << "Directory already exists" << endl;
                   } else if (target_path == root_path) {
                     if (current_path == root_path) {
                       // like `mkdir .`
-                      cerr << "Directory already exists." << endl;
+                      cerr << "Directory already exists" << endl;
                     } else {
                       // target path going to root path
                       // but this should already exist so error out
-                      cerr << "Directory already exists." << endl;
+                      cerr << "Directory already exists" << endl;
                     }
                   } else if (target_path == root_path.parent_path()) {
                     // like `mkdir ..`
-                    cerr << "Directory already exists." << endl;
+                    cerr << "Directory already exists" << endl;
                   } else if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
                     if (relative_path.has_parent_path()) {
                       // if the directory path is outside the root path
                       // Warn and stay in the current directory
-                      cerr << "Directory is outside of the root directory." << endl;
+                      cerr << "Directory is outside of the root directory" << endl;
 
                       if (relative_path.string().find("..") != string::npos) {
                         // if the directory path is outside the root path
                         // Warn and stay in the current directory
-                        cerr << "Directory is outside of the root directory." << endl;
+                        cerr << "Directory is outside of the root directory" << endl;
                       } else {
                         // relative path is trying a subdirectory
                         if (fs::exists(directory_name) && fs::is_directory(directory_name)) {
                           // the directory exists, so we shouldn't create it
-                          cerr << "Directory already exists." << endl;
+                          cerr << "Directory already exists" << endl;
                         } else {
                           // If a directory doesn't exist,
                           // then check if there exists its parent directory
@@ -603,10 +615,10 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
                         // relative_path contains .. meaning it is trying to go outside root directory
                         // if the directory path is outside the root path
                         // Warn and stay in the current directory
-                        cerr << "Directory is outside of the root directory." << endl;
+                        cerr << "Directory is outside of the root directory" << endl;
                       } else {
                         // the directory exists, can't create it
-                        cerr << "Directory already exists." << endl;
+                        cerr << "Directory already exists" << endl;
                       }
                     }
                   } else {
@@ -621,24 +633,25 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
                 // This should vary depending upon what kind of user is currently logged in
                 // mkdir /  means creating current user’s root directory
                 // but this should already exist so error out
-                cerr << "Directory already exists." << endl;
+                cerr << "Directory already exists" << endl;
               } else {
                 // if the directory path is outside the root path
                 // Warn and stay in the current directory
-                cerr << "Directory is outside of the root directory." << endl;
+                cerr << "Directory is outside of the root directory" << endl;
               }
             }
         }
       }
       }
     } else if (cmd == "mkfile") {
-      if (!check_if_personal_directory(user_name, custom_pwd(filesystem_path), filesystem_path)) {
-        cout << "Forbidden" << endl;
-      } else {
-      //`mkfile <filename> <contents>`
       istring_stream >> filename;
       getline(istring_stream, contents);
 
+      if (filename.find('/') != string::npos) {
+        cout << "File name cannot contain /" << endl;
+      } else if (!check_if_personal_directory(user_name, custom_pwd(filesystem_path), filesystem_path)) {
+        cout << "Forbidden" << endl;
+      } else {
       filesystem::path path_obj(filename);
       string filename_str = path_obj.filename().string();
       string parent_path_str = path_obj.parent_path().string();
