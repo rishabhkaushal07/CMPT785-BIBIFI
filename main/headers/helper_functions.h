@@ -309,7 +309,7 @@ bool contains_backticks(const string& input) {
 bool is_valid_filename(const string& filename) {
 
   // reference: https://stackoverflow.com/questions/11794144/regular-expression-for-valid-filename
-  regex pattern("^[a-zA-Z0-9](?:[a-zA-Z0-9 ._-]*[a-zA-Z0-9])?\\.[a-zA-Z0-9_-]+$");
+  regex pattern("^[a-zA-Z0-9](?:[a-zA-Z0-9 ._-]*[a-zA-Z0-9])?(\\.(?!$)[a-zA-Z0-9_-]+)+$|^([a-zA-Z0-9](?:[a-zA-Z0-9 ._-]*[a-zA-Z0-9])?)$");
 
   int max_length = 255;
 
