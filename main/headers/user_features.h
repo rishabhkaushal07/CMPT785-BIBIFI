@@ -128,6 +128,23 @@ void make_directory(string directory_name, string &filesystem_path, string usern
   }
 }
 
+// for mkfile; returns existing random name if file already exits, returns new random name otherwise.
+string get_enc_filename(string filename, string path, string filesystem_path) {
+  int dir_itr_path = path.find_last_of('/');
+  for (fs::directory_entry entry : fs::directory_iterator(filesystem_path + path.substr(0, dir_itr_path+1))) {
+    string entry_path = entry.path();
+    int delete_upto = entry_path.find_last_of('/') + 1;
+    entry_path.erase(0, delete_upto);
+
+    fs::file_status status = fs::status(entry_path);
+    string decrypted_name = decrypt_filename(entry_path, filesystem_path);
+    // return true only if a file of same name exists
+    if (filename == decrypted_name && status.type() == fs::file_type::regular)
+      return entry_path;
+  }
+  return encrypt_filename(path, filesystem_path);
+}
+
 void make_file(string filename, string contents, vector<uint8_t> key, string filesystem_path, string username) {
   if (!check_if_personal_directory(username, custom_pwd(filesystem_path), filesystem_path)) {
     cout << "Forbidden" << endl;
@@ -135,7 +152,8 @@ void make_file(string filename, string contents, vector<uint8_t> key, string fil
   }
 
   string path = custom_pwd(filesystem_path) + "/" + filename;
-  string encrypted_name = encrypt_filename(path, filesystem_path);
+  // calling mkfile specific wrapper for encrypt_filename, to get existing encrypted name, if file already exists
+  string encrypted_name = get_enc_filename(filename, path, filesystem_path);
   encrypt_file(encrypted_name, contents, key);
   check_if_shared(encrypted_name, filesystem_path, contents);
 }
@@ -391,7 +409,6 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
       if (path != filesystem_path + "/filesystem") {
         cout << "d -> .." << endl;
       }
-
       for (fs::directory_entry entry : fs::directory_iterator(path)) {
         string entry_path = entry.path();
         int delete_upto = entry_path.find_last_of('/') + 1;
