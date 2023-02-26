@@ -113,7 +113,12 @@ void check_if_shared(string filename, string filesystem_path, string content) {
   } 
 }
 
-void make_directory(string directory_name, string &filesystem_path) {
+void make_directory(string directory_name, string &filesystem_path, string username) {
+  if (!check_if_personal_directory(username, custom_pwd(filesystem_path), filesystem_path)) {
+    cout << "Forbidden" << endl;
+    return;
+  }
+
   if (directory_name.find('/') != string::npos) {
     cout << "Directory name cannot contain /" << endl;
   } else {
@@ -123,7 +128,12 @@ void make_directory(string directory_name, string &filesystem_path) {
   }
 }
 
-void make_file(string filename, string contents, vector<uint8_t> key, string filesystem_path) {
+void make_file(string filename, string contents, vector<uint8_t> key, string filesystem_path, string username) {
+  if (!check_if_personal_directory(username, custom_pwd(filesystem_path), filesystem_path)) {
+    cout << "Forbidden" << endl;
+    return;
+  }
+
   string path = custom_pwd(filesystem_path) + "/" + filename;
   string encrypted_name = encrypt_filename(path, filesystem_path);
   encrypt_file(encrypted_name, contents, key);
@@ -427,6 +437,9 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
 
       share_file(key, share_username, filename, filesystem_path);
     } else if (cmd == "mkdir") {
+      if (!check_if_personal_directory(user_name, custom_pwd(filesystem_path), filesystem_path)) {
+        cout << "Forbidden" << endl;
+      } else {
       // create a new directory
       istring_stream >> directory_name;
 
@@ -459,13 +472,13 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
                         cerr << "Directory already exists." << endl;
                       } else {
                         // create directory
-                        make_directory(directory_name, filesystem_path);
+                        make_directory(directory_name, filesystem_path, user_name);
                         // system(("mkdir " + directory_name).c_str());
                       }
                     } else if (target_path == root_path.parent_path()) {
                       // like `going back one directory ..`
                       // create directory
-                      make_directory(directory_name, filesystem_path);
+                      make_directory(directory_name, filesystem_path, user_name);
                       // system(("mkdir " + directory_name).c_str());
                     } else {
                       // if the directory path is outside the root path
@@ -526,7 +539,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
                           // else do not create it
                           // good thing is that system() automatically checks this
                           // so no need to explicitly check for it
-                          make_directory(directory_name, filesystem_path);
+                          make_directory(directory_name, filesystem_path, user_name);
                           // system(("mkdir " + directory_name).c_str());
                         }
                       }
@@ -543,7 +556,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
                     }
                   } else {
                     // directory doesn't exist, so create it
-                    make_directory(directory_name, filesystem_path);
+                    make_directory(directory_name, filesystem_path, user_name);
                     // system(("mkdir " + directory_name).c_str());
                   }
                 }
@@ -562,7 +575,11 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
             }
         }
       }
+      }
     } else if (cmd == "mkfile") {
+      if (!check_if_personal_directory(user_name, custom_pwd(filesystem_path), filesystem_path)) {
+        cout << "Forbidden" << endl;
+      } else {
       //`mkfile <filename> <contents>`
       istring_stream >> filename;
       getline(istring_stream, contents);
@@ -578,7 +595,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         if (is_valid_path(parent_path_str, root_path)){
             if(is_valid_filename(filename)) {
               // create file
-              make_file(filename, contents, key, filesystem_path);
+              make_file(filename, contents, key, filesystem_path, user_name);
               // encrypt_file(filename, contents, key);
               // check_if_shared(filename, filesystem_path, contents);
             } else {
@@ -588,12 +605,13 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
       } else if (!filename_str.empty()) {
         if(is_valid_filename(filename)) {
             // create file
-            make_file(filename, contents, key, filesystem_path);
+            make_file(filename, contents, key, filesystem_path, user_name);
             // encrypt_file(filename, contents, key);
             // check_if_shared(filename, filesystem_path, contents);
         } else {
             cerr << "not a valid filename, try again" << endl;
         }
+      }
       }
     } else if (cmd == "exit") {
       exit(EXIT_SUCCESS);

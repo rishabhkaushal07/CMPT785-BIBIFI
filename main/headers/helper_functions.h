@@ -322,6 +322,24 @@ bool is_valid_filename(const string& filename) {
 
 }
 
+bool check_if_personal_directory(string username, string pwd, string filesystem_path) {
+  string randomized_user_directory = get_randomized_name("/filesystem/" + username, filesystem_path);
+  string randomized_personal_directory = get_randomized_name("/filesystem/" + randomized_user_directory + "/personal", filesystem_path);
+  string authorized_path_to_write = "/filesystem/" + randomized_user_directory + "/" + randomized_personal_directory;
+
+  if (pwd.length() < authorized_path_to_write.length()) {
+    return false;
+  }
+
+  pwd.erase(authorized_path_to_write.length(), pwd.length());
+
+  if (authorized_path_to_write == pwd) {
+    return true;
+  }
+
+  return false;
+}
+
 void create_init_fs_for_user(string username, string path) {
   mode_t old_umask = umask(0); // to ensure the following modes get set
   mode_t mode = 0700;
