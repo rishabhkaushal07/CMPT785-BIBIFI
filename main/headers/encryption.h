@@ -13,15 +13,15 @@
 using namespace std;
 
 void handleErrors(void);
-void encrypt_file(string filePath, string content, vector<uint8_t> keyin);
-string decrypt_file(string filePath, vector<uint8_t> keyin);
+void encrypt_file(string filePath, string content, vector<uint8_t> keyin, string path_to_metadata);
+string decrypt_file(string filePath, vector<uint8_t> keyin, string path_to_metadata);
 
 void handleErrors(void) {
     ERR_print_errors_fp(stderr);
     abort();
 }
 
-void encrypt_file(string filePath, string content, vector<uint8_t> keyin) {
+void encrypt_file(string filePath, string content, vector<uint8_t> keyin, string path_to_metadata) {
     unsigned char* key = keyin.data();
     // generate random iv for each file
     uint8_t iv[IV_SIZE];
@@ -30,9 +30,7 @@ void encrypt_file(string filePath, string content, vector<uint8_t> keyin) {
     unsigned char tag[TAG_SIZE];
 
     // Generate the output file path.
-    // ToDo: invoke the filename_encryption function to get the randomized filepath 
-    // string output_filepath = filename_encryption(filePath);
-    string output_filepath = filePath;
+    string output_filepath = encrypt_filename(filePath,path_to_metadata);
 
     // Open the output file for writing.
     ofstream output_file(output_filepath);
@@ -108,9 +106,7 @@ string decrypt_file(string filePath, vector<uint8_t> keyin) {
     unsigned char* key = keyin.data();
     string ptoutput = "";
     // Open the input file for reading.
-    // ToDo: Invoke the filename_decryption function to get the mapping of the plaintext filename
-    // ifstream input_file(filename_decryption(filePath));
-    ifstream input_file(filePath);
+    ifstream input_file(decrypt_filename(filePath, path_to_metadata));
     if (!input_file) {
         throw ios_base::failure("Failed to open file: " + filePath);
     }
