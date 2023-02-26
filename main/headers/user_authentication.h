@@ -92,8 +92,15 @@ bool is_valid_keyfile(const string &username)
 
 string get_type_of_user(const std::string &keyfile_name)
 {
-    string username = keyfile_name;
-    username.erase(username.find_first_of("_ "));
+    struct stat sb;
+    // if keyfile name doesn't exist, exit
+    if(stat(("private_keys/"+keyfile_name).c_str(), &sb) != 0) {
+        cout << "Invalid keyfile" << endl;
+        exit(EXIT_FAILURE);
+    }
+
+     string username = keyfile_name;
+     username.erase(username.find_first_of("_ "));
     if (is_valid_keyfile(username)) {
         cout << "Logged in as " << username << endl;
         return username;
