@@ -327,16 +327,20 @@ bool is_valid_filename(const string& filename) {
 void create_init_fs_for_user(string username, string path) {
   mode_t old_umask = umask(0); // to ensure the following modes get set
   mode_t mode = 0700;
-  string u_folder = path + "/filesystem/" + username;
+
+  string encrypted_username = encrypt_filename("/filesystem/" + username, path);
+  string u_folder = path + "/filesystem/" + encrypted_username;
   if (mkdir(u_folder.c_str(), mode) != 0) {
     std::cerr << "Error creating root folder for " << username << std::endl;
   }
   else {
-    u_folder = path + "/filesystem/" + username + "/personal";
+    string encrypted_p_folder = encrypt_filename("/filesystem/" + encrypted_username + "/personal", path);
+    u_folder = path + "/filesystem/" + encrypted_username + "/" + encrypted_p_folder;
     if (mkdir(u_folder.c_str(), mode) != 0) {
       std::cerr << "Error creating personal folder for " << username << std::endl;
     }
-    u_folder = path + "/filesystem/" + username + "/shared";
+    string encrypted_s_folder = encrypt_filename("/filesystem/" + encrypted_username + "/shared", path);
+    u_folder = path + "/filesystem/" + encrypted_username + "/" + encrypted_s_folder;
     if (mkdir(u_folder.c_str(), mode) != 0) {
       std::cerr << "Error creating shared folder for " << username << std::endl;
     }

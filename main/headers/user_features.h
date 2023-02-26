@@ -119,6 +119,40 @@ void make_file(string filename, string contents, vector<uint8_t> key, string fil
   check_if_shared(encrypted_name, filesystem_path, contents);
 }
 
+string get_encrypted_file_path(string path, string filesystem_path) {
+  string pwd = custom_pwd(filesystem_path);
+  size_t pos = 0;
+  string delimiter = "/";
+  vector<string> filenames;
+  string key_path = pwd;
+  while ((pos = path.find(delimiter)) != string::npos) {
+      string name = path.substr(0, pos);
+      if (name == "." ) {
+        filenames.push_back(name);
+        path.erase(0, pos + delimiter.length());
+        continue;
+      } else if (name == "..") {
+        int last_occurence = key_path.find_last_of('/');
+        key_path.erase(last_occurence, key_path.length());
+        filenames.push_back(name);
+        path.erase(0, pos + delimiter.length());
+        continue;
+      }
+      string randomized = get_randomized_name(key_path + "/" + name, filesystem_path);
+      filenames.push_back(randomized);
+      key_path = key_path + "/" + randomized;
+      path.erase(0, pos + delimiter.length());
+  }
+  filenames.push_back(get_randomized_name(key_path + "/" + path, filesystem_path));
+
+  string encrypted_file_path = "";
+  for (const auto& name : filenames) {
+    encrypted_file_path = encrypted_file_path + name + "/";
+  }
+
+  return encrypted_file_path;
+}
+
 int user_features(string user_name, User_type user_type, vector<uint8_t> key, string filesystem_path) {
   cout << "=======================" << endl;
   cout << "Available commands are: \n" << endl;
@@ -142,7 +176,8 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
   } else if (user_type == user) {
     cout << "=======================" << endl;
     // set root path = user's root path which is its own directory
-    root_path = user_root_path / user_name;
+    string user_folder = get_randomized_name("/filesystem/" + user_name, filesystem_path);
+    root_path = user_root_path / user_folder;
   }
 
   fs::current_path(root_path);
@@ -171,6 +206,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         cerr << "Error: directory name should not contain `backticks`, try again." << endl;
       } else {
         directory_name = normalize_path(directory_name);
+        directory_name = get_encrypted_file_path(directory_name, filesystem_path);
 
         // construct a target (absolute) path from the directory name
         fs::path current_path = fs::current_path();
@@ -332,9 +368,9 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
       if (filename.empty()) {
         cout << "filename not provided";
       } else {
-        // string path = custom_pwd(filesystem_path) + "/" + filename;
-        cout << decrypt_file(filename, key) << endl;
-        // system(("cat " + filename).c_str());
+        string path = custom_pwd(filesystem_path) + "/" + filename;
+        string encrypted_name = get_randomized_name(path, filesystem_path);
+        cout << decrypt_file(encrypted_name, key) << endl;
       }
     } else if (cmd == "share") {
       string share_username;
