@@ -76,41 +76,53 @@ void share_file(vector<uint8_t> key, string username, string filename, string fi
   string randomized_shared_directory = get_randomized_name("/filesystem/" + randomized_user_directory + "/shared", filesystem_path);
 
   string content = decrypt_file(randomized_filename, key);
-  string share_user_path = filesystem_path + "/filesystem/" + randomized_user_directory + "/" + randomized_shared_directory + "/" + randomized_filename;
   vector<uint8_t> share_key = read_enc_key_from_metadata(username, filesystem_path + "/metadata/");
   string filename_key = "/filesystem/" + randomized_user_directory + "/" + randomized_shared_directory + "/" + filename;
-  add_randomized_filename(filename_key, randomized_filename, filesystem_path);
+  string shared_randomized_filename = encrypt_filename(filename_key, filesystem_path);
+  string share_user_path = filesystem_path + "/filesystem/" + randomized_user_directory + "/" + randomized_shared_directory + "/" + shared_randomized_filename;
   encrypt_file(share_user_path, content, share_key);
 
   string shared_data_path = filesystem_path + "/shared_files";
-  add_contents_to_file(randomized_filename, shared_data_path, username);
+  string shared_data_content = username + ":" + filename_key;
+  add_contents_to_file(randomized_filename, shared_data_path, shared_data_content);
 }
 
-void update_shared_files(vector<string> usernames, string randomized_filename, string filesystem_path, string content) {
-  for (const string& username : usernames) {
-    string randomized_user_directory = get_randomized_name("/filesystem/" + username, filesystem_path);
-    string randomized_shared_directory = get_randomized_name("/filesystem/" + randomized_user_directory + "/shared", filesystem_path);
-    string share_user_path = filesystem_path + "/filesystem/" + randomized_user_directory + "/" + randomized_shared_directory + "/" + randomized_filename;
+void update_shared_files(vector<string> keys, vector<string> usernames, string randomized_filename, string filesystem_path, string content) {
+  for (int i = 0; i < keys.size(); i++) {
+    string key = keys[i];
+    string username = usernames[i];
+    string shared_randomized_filename = get_randomized_name(key, filesystem_path);
+    int last_occurence = key.find_last_of('/');
+    key.erase(last_occurence + 1, key.length());
+    string share_user_path = filesystem_path + key + shared_randomized_filename;
+
     vector<uint8_t> share_key = read_enc_key_from_metadata(username, filesystem_path + "/metadata/");
     encrypt_file(share_user_path, content, share_key);
   }
 }
 
 void check_if_shared(string filename, string filesystem_path, string content) {
-  string randomized_filename = get_randomized_name(custom_pwd(filesystem_path) + "/" + filename, filesystem_path);
+  string randomized_filename = filename;
 
+  vector<string> keys;
   vector<string> usernames;
   string filepath = filesystem_path + "/shared_files/" + randomized_filename;
   if (fs::exists(filepath)) {
     ifstream file(filepath);
     string line;
     while (getline(file, line)) {
-        usernames.push_back(line);
-    }
+      size_t pos = line.find(":");
+      if (pos != string::npos) {
+        string username = line.substr(0, pos);
+        string key = line.substr(pos + 1);
+        usernames.push_back(username);
+        keys.push_back(key);
+      }
+    } 
     file.close();
 
-    update_shared_files(usernames, randomized_filename, filesystem_path, content);
-  } 
+    update_shared_files(keys, usernames, randomized_filename, filesystem_path, content);
+  }  
 }
 
 // for mkfile; returns existing random name if file already exits, returns new random name otherwise.
@@ -125,8 +137,9 @@ string get_enc_filename(string filename, string path, string filesystem_path, bo
     fs::file_status status = fs::status(entry_path);
     string decrypted_name = decrypt_filename(entry_path, filesystem_path);
     // return same path if a file with same name exists
-    if (!ismkdir && filename == decrypted_name && status.type() == fs::file_type::regular)
+    if (!ismkdir && filename == decrypted_name && status.type() == fs::file_type::regular) {
       return entry_path;
+    }
     else if (filename == decrypted_name && status.type() == fs::file_type::directory) {
       if (!ismkdir)
         cout << "A directory with the same name exists in the current path. Choose a different name." << endl;
@@ -464,6 +477,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         if (fs::exists(encrypted_name)) {
           cout << decrypt_file(encrypted_name, key) << endl;
         } else {
+          cout<<custom_pwd(filesystem_path) + "/" + filename<< endl;
           cout << "File does not exist." << endl;
         }
       }
@@ -637,8 +651,6 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
             if(is_valid_filename(filename)) {
               // create file
               make_file(filename, contents, key, filesystem_path, user_name);
-              // encrypt_file(filename, contents, key);
-              // check_if_shared(filename, filesystem_path, contents);
             } else {
               cerr << "not a valid filename, try again" << endl;
             }
@@ -647,8 +659,6 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         if(is_valid_filename(filename)) {
             // create file
             make_file(filename, contents, key, filesystem_path, user_name);
-            // encrypt_file(filename, contents, key);
-            // check_if_shared(filename, filesystem_path, contents);
         } else {
             cerr << "not a valid filename, try again" << endl;
         }
