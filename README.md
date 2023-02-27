@@ -89,13 +89,17 @@ for the new shell will be "/", with personal and shared directories available fo
     - `.gitignore`
     - `.htaccess`
 
+### `Encryption Algorithm`
+- While it is difficult to declare one cryptographic algorithm absolutely better than all others, in case of file system encryption, using AES was a good bet. 
+- Decided to use AES in GCM mode with sufficiently large key and tag sizes, to have message authentication in place, which would avoid attacks on data integrity.
+- Security in AES GCM relies heavily on nonce uniqueness, therefore, a unique IV is being generated for each file to be encrypted.
 
 
 ## Running the program Locally
 
+To create executable named `fileserver`, run the following command:
+`g++ -std=c++17 -o fileserver main/main.cpp -L<path_to_openssl>/lib -I<path_to_openssl>/include -lssl -lcrypto`
 - Can use the following `Makefile` commands:
-  - `make all` - to run `g++ -o fileserver main/main.cpp`
-    - This will create an executable called `fileserver`
   - `make clean` - to run `rm -rf fileserver`
     - This will delete the executable called `fileserver`
 - To execute the program, enter `./fileserver keyfile_name` in the cli.
