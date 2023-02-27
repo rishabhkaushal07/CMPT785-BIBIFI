@@ -188,6 +188,19 @@ void make_directory(string directory_name, string &filesystem_path, string usern
     return;
   }
 
+  for (fs::directory_entry entry : fs::directory_iterator(fs::current_path())) {
+    string entry_path = entry.path();
+    int delete_upto = entry_path.find_last_of('/') + 1;
+    entry_path.erase(0, delete_upto);
+
+    string decrypted_name = decrypt_filename(entry_path, filesystem_path);
+
+    if (directory_name == decrypted_name) {
+      cerr << "A file with the same name already exists" << endl;
+      return;
+    }
+  }
+
   if (directory_name.find('/') != string::npos) {
     cout << "Directory name cannot contain /" << endl;
   } else {
