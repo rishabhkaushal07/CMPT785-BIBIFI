@@ -341,7 +341,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         directory_name = normalize_path(directory_name);
         directory_name = get_encrypted_file_path(directory_name, filesystem_path);
 
-        if(directory_name == ".") {
+        if(directory_name == "." || directory_name == "./") {
             // like `cd .`
             // do nothing and continue
             continue;
