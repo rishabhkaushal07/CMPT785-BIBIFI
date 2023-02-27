@@ -517,7 +517,14 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         string encrypted_name = get_randomized_name(path, filesystem_path);
 
         if (fs::exists(encrypted_name)) {
-          cout << decrypt_file(encrypted_name, key) << endl;
+          if (user_type == admin) {
+            string pwd = get_decrypted_file_path(custom_pwd(filesystem_path), filesystem_path);
+            string user_for_key = get_username_from_path(pwd);
+            vector<uint8_t> user_key = read_enc_key_from_metadata(user_for_key, filesystem_path + "/metadata/");
+            cout << decrypt_file(encrypted_name, user_key) << endl;
+          } else {
+            cout << decrypt_file(encrypted_name, key) << endl;
+          }
         } else {
           cout<<custom_pwd(filesystem_path) + "/" + filename<< endl;
           cout << "File does not exist" << endl;

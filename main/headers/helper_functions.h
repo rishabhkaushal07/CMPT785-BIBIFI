@@ -339,6 +339,17 @@ bool check_if_personal_directory(string username, string pwd, string filesystem_
   return false;
 }
 
+string get_username_from_path(string path) {
+  string username = path;
+  string filesystem_str = "/filesystem/";
+  username.erase(0, filesystem_str.length());
+  size_t index = username.find('/');
+  if (index != string::npos) {
+      username.erase(index, username.length());
+  }
+  return username;
+}
+
 void create_init_fs_for_user(string username, string path) {
   mode_t old_umask = umask(0); // to ensure the following modes get set
   mode_t mode = 0700;
