@@ -341,12 +341,6 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         directory_name = normalize_path(directory_name);
         directory_name = get_encrypted_file_path(directory_name, filesystem_path);
 
-        // remove /
-        // this is to avoid any potential issues from get_encrypted_file_path() that appends / sometimes
-        if (directory_name.length() > 1) {
-          directory_name.erase(remove(directory_name.begin(), directory_name.end(), '/'), directory_name.end());
-        }
-
         if(directory_name == ".") {
             // like `cd .`
             // do nothing and continue
