@@ -76,7 +76,6 @@ for the new shell will be "/", with personal and shared directories available fo
 - [Checks for valid filenames](https://stackoverflow.com/questions/11794144/regular-expression-for-valid-filename)
   - This guarantees that solely the letters of the English alphabet are employed.
   - There are no spaces at the start or end.
-  - Also makes certain that the file has an extension of at least one character and does not contain any white space.
   - Examples: `web.config, hosts, .gitignore, httpd.conf, .htaccess`.
   - The following file creations are allowed
     - `web.config`
@@ -86,7 +85,6 @@ for the new shell will be "/", with personal and shared directories available fo
     - `my long file name.txt`
   - The following file creations are NOT allowed (though in reality they're valid):
     - `æøå.txt`
-    - `hosts`
     - `.gitignore`
     - `.htaccess`
 

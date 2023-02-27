@@ -164,6 +164,12 @@ string decrypt_file(string filePath, vector<uint8_t> keyin) {
     // Clean up the context and close the files.
     EVP_CIPHER_CTX_free(ctx);
     input_file.close();
+
+    // Delete first character if its a space
+    if (!ptoutput.empty() && ptoutput[0] == ' ') { 
+        ptoutput.erase(0, 1);
+    }
+
     return ptoutput;
 }
 
