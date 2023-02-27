@@ -10,19 +10,14 @@
 #include <fstream>
 #include <openssl/rand.h>
 #include <regex>
+#include "enc_consts.h"
 
-#include "user_type.h"
-#include "user_features.h"
+#include "randomizer_function.h"
 
 using namespace std;
 namespace fs = std::filesystem;
-const int KEY_SIZE = 32; //bytes
 
-// TODO: once the filesystem directory and logic is created,
-// TODO: use correct admin_root_path and user_root_path
-
-// TODO: delete this function once the mkfile cmd starts to use encrypt
-void mkfile(std::string filename, std::string contents) {
+int mkfile(string filename, string contents) {
 
   ofstream file;
   file.open(filename);
@@ -30,8 +25,10 @@ void mkfile(std::string filename, std::string contents) {
     file << contents;
     cout << "Success: File created successfully!" << endl;
     file.close();
+    return 0;
   } else {
     cerr << "Error: Could not create file!" << endl;
+    return 1;
   }
 
 }
@@ -56,7 +53,6 @@ string normalize_path(string path) {
   }
   return path;
 }
-
 
 bool is_valid_path(string &directory_name, const fs::path& root_path) {
   directory_name = normalize_path(directory_name);
@@ -271,9 +267,9 @@ bool is_valid_path(string &directory_name, const fs::path& root_path) {
 
 }
 
-void add_enc_key_to_metadata(string username){
+void add_enc_key_to_metadata(string username, string path){
     // create metadata key file if not present
-    fstream file("metadata/" + username + "_key", ios::out | ios::binary);
+    fstream file(path + "/metadata/" + username + "_key", ios::out | ios::binary);
     if (!file.is_open()) {
         std::cout << "Failed to create user metadata key file" << std::endl;
         return;
@@ -285,18 +281,22 @@ void add_enc_key_to_metadata(string username){
     file.close();
 }
 
-uint8_t* read_enc_key_from_metadata(string username){
-    fstream file("metadata/" + username + "_key", ios::in | ios::binary);
+vector<uint8_t> read_enc_key_from_metadata(string username, string path) {
+    string metadata_path = (path.size() > 0) ? path : "metadata/";
+    fstream file(metadata_path + username + "_key", ios::in | ios::binary);
     if (!file.is_open()) {
-      std::cout << "Failed to read key from metadata" << std::endl;
+      cout << "Failed to read key from metadata" << endl;
+      // return an empty vector if the file failed to open
+      return vector<uint8_t>{};
     }
-    uint8_t key[KEY_SIZE];
-    file.read((char*)key, KEY_SIZE);
+    vector<uint8_t> key(KEY_SIZE);
+    file.read(reinterpret_cast<char*>(key.data()), key.size());
     return key;
 }
+
 bool contains_backticks(const string& input) {
 
-  if (input.find('`') != std::string::npos) {
+  if (input.find('`') == std::string::npos) {
     // `backtick` found
     return false;
   }
@@ -305,11 +305,10 @@ bool contains_backticks(const string& input) {
   return true;
 }
 
-
 bool is_valid_filename(const string& filename) {
 
   // reference: https://stackoverflow.com/questions/11794144/regular-expression-for-valid-filename
-  regex pattern("^[a-zA-Z0-9](?:[a-zA-Z0-9 ._-]*[a-zA-Z0-9])?\\.[a-zA-Z0-9_-]+$");
+  regex pattern("^[a-zA-Z0-9](?:[a-zA-Z0-9 ._-]*[a-zA-Z0-9])?(\\.(?!$)[a-zA-Z0-9_-]+)+$|^([a-zA-Z0-9](?:[a-zA-Z0-9 ._-]*[a-zA-Z0-9])?)$");
 
   int max_length = 255;
 
@@ -322,5 +321,57 @@ bool is_valid_filename(const string& filename) {
 
 }
 
+bool check_if_personal_directory(string username, string pwd, string filesystem_path) {
+  string randomized_user_directory = get_randomized_name("/filesystem/" + username, filesystem_path);
+  string randomized_personal_directory = get_randomized_name("/filesystem/" + randomized_user_directory + "/personal", filesystem_path);
+  string authorized_path_to_write = "/filesystem/" + randomized_user_directory + "/" + randomized_personal_directory;
+
+  if (pwd.length() < authorized_path_to_write.length()) {
+    return false;
+  }
+
+  pwd.erase(authorized_path_to_write.length(), pwd.length());
+
+  if (authorized_path_to_write == pwd) {
+    return true;
+  }
+
+  return false;
+}
+
+string get_username_from_path(string path) {
+  string username = path;
+  string filesystem_str = "/filesystem/";
+  username.erase(0, filesystem_str.length());
+  size_t index = username.find('/');
+  if (index != string::npos) {
+      username.erase(index, username.length());
+  }
+  return username;
+}
+
+void create_init_fs_for_user(string username, string path) {
+  mode_t old_umask = umask(0); // to ensure the following modes get set
+  mode_t mode = 0700;
+
+  string encrypted_username = encrypt_filename("/filesystem/" + username, path);
+  string u_folder = path + "/filesystem/" + encrypted_username;
+  if (mkdir(u_folder.c_str(), mode) != 0) {
+    std::cerr << "Error creating root folder for " << username << std::endl;
+  }
+  else {
+    string encrypted_p_folder = encrypt_filename("/filesystem/" + encrypted_username + "/personal", path);
+    u_folder = path + "/filesystem/" + encrypted_username + "/" + encrypted_p_folder;
+    if (mkdir(u_folder.c_str(), mode) != 0) {
+      std::cerr << "Error creating personal folder for " << username << std::endl;
+    }
+    string encrypted_s_folder = encrypt_filename("/filesystem/" + encrypted_username + "/shared", path);
+    u_folder = path + "/filesystem/" + encrypted_username + "/" + encrypted_s_folder;
+    if (mkdir(u_folder.c_str(), mode) != 0) {
+      std::cerr << "Error creating shared folder for " << username << std::endl;
+    }
+  }
+  umask(old_umask); // Restore the original umask value
+}
 
 #endif // CMPT785_BIBIFI_HELPER_FUNCTIONS_H
