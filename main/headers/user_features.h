@@ -54,6 +54,12 @@ void share_file(vector<uint8_t> key, string username, string filename, string fi
     return;
   }
 
+  fs::file_status status = fs::status(randomized_filename);
+  if (status.type() != fs::file_type::regular) {
+    cerr << "Only files can be shared" << endl;
+    return;
+  }
+
   // fetch user list and check is username exists
   string path = filesystem_path + "/public_keys";
   bool if_user_exists = false;
@@ -511,7 +517,10 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         cout << "File name not provided" << endl;
       } else if (filename.find('/') != string::npos) {
         cout << "File name cannot contain /" << endl;
-      } else {
+      } else if (fs::status(filename).type() != fs::file_type::regular)) {
+        cerr << "Only files can be viewed" << endl;
+        return;
+      }else {
         string path = custom_pwd(filesystem_path) + "/" + filename;
         string encrypted_name = get_randomized_name(path, filesystem_path);
 
