@@ -45,7 +45,7 @@ void add_contents_to_file(string filename, string filepath, string content) {
   }
 }
 
-void share_file(vector<uint8_t> key, string username, string filename, string filesystem_path) {
+void share_file(vector<uint8_t> key, string username, string filename, string filesystem_path, string logged_username) {
   string randomized_filename = get_randomized_name(custom_pwd(filesystem_path) + "/" + filename, filesystem_path);
 
   // check if file exists
@@ -55,8 +55,8 @@ void share_file(vector<uint8_t> key, string username, string filename, string fi
   }
 
   fs::file_status status = fs::status(randomized_filename);
-  if (status.type() != fs::file_type::regular) {
-    cerr << "Only files can be shared" << endl;
+  if (status.type() == fs::file_type::directory) {
+    cerr << "File does not exist" << endl;
     return;
   }
 
@@ -83,7 +83,7 @@ void share_file(vector<uint8_t> key, string username, string filename, string fi
 
   string content = decrypt_file(randomized_filename, key);
   vector<uint8_t> share_key = read_enc_key_from_metadata(username, filesystem_path + "/metadata/");
-  string filename_key = "/filesystem/" + randomized_user_directory + "/" + randomized_shared_directory + "/" + filename;
+  string filename_key = "/filesystem/" + randomized_user_directory + "/" + randomized_shared_directory + "/" + logged_username + "-" + filename;
   string shared_randomized_filename = encrypt_filename(filename_key, filesystem_path);
   string share_user_path = filesystem_path + "/filesystem/" + randomized_user_directory + "/" + randomized_shared_directory + "/" + shared_randomized_filename;
   encrypt_file(share_user_path, content, share_key);
@@ -517,9 +517,8 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         cout << "File name not provided" << endl;
       } else if (filename.find('/') != string::npos) {
         cout << "File name cannot contain /" << endl;
-      } else if (fs::status(filename).type() != fs::file_type::regular)) {
-        cerr << "Only files can be viewed" << endl;
-        return;
+      } else if (fs::status(filename).type() == fs::file_type::directory) {
+        cerr << "File does not exist" << endl;
       }else {
         string path = custom_pwd(filesystem_path) + "/" + filename;
         string encrypted_name = get_randomized_name(path, filesystem_path);
@@ -546,7 +545,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
       if (filename.find('/') != string::npos) {
         cout << "File name cannot contain /" << endl;
       } else {
-        share_file(key, share_username, filename, filesystem_path);
+        share_file(key, share_username, filename, filesystem_path, user_name);
       }
     } else if (cmd == "mkdir") {
       istring_stream >> directory_name;
