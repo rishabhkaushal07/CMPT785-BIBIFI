@@ -352,7 +352,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
 
     if (cin.eof()) {
         // Ctrl+D was pressed
-        std::cout << "Ctrl+D detected." << std::endl;
+        cout << "Ctrl+D detected." << endl;
         return 1;
     }
 

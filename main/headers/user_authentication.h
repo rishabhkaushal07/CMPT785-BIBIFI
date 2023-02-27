@@ -21,26 +21,26 @@ void add_user(const string& username, string path, bool admin=false)
     // Check if admin creation, when filesystem first start admin=true, after that admin is not allowed as username
     if(!admin) {
         if(username == "admin") {
-            std::cout << "Error: Invalid Username." << std::endl;
+            cout << "Error: Invalid Username." << endl;
             return;
         }
     }
     
     // Check if the username is super long
     if (username.length() > 50) {
-        std::cout << "Error: Username is too long." << std::endl;
+        cout << "Error: Username is too long." << endl;
         return;
     }
 
     // Check that the username only contains letters, numbers, and underscores
     std::regex username_regex("^[a-zA-Z0-9_]*$");
     if (!std::regex_match(username, username_regex)) {
-        std::cout << "Error: Username contains invalid characters." << std::endl;
+        cout << "Error: Username contains invalid characters." << endl;
         return;
     }
     // Check if the user already exist
     if (std::filesystem::exists(path + "public_keys/" + (username + ".pub")) || std::filesystem::exists(path + "private_keys/" + (username + "_keyfile"))) {
-        std::cout << "User " << username << " already exists." << std::endl;
+        cout << "User " << username << " already exists." << endl;
         return;
     }
 
@@ -75,7 +75,7 @@ bool is_valid_keyfile(const string &username)
     std::string expected_public_key;
     std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(command.c_str(), "r"), pclose);
     if (!pipe) {
-        std::cerr << "Failed to run command: " << command << std::endl;
+        cerr << "Failed to run command: " << command << endl;
         return false;
     }
     while (fgets((char*)buffer, 128, pipe.get()) != nullptr) {

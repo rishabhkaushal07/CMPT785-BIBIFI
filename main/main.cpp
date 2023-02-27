@@ -37,27 +37,27 @@ int main(int argc, char *argv[]) {
   else{
     mode_t old_umask = umask(0); // to ensure the following modes get set
     if (mkdir("public_keys", mode) != 0) {
-      std::cerr << "Error creating public_keys." << std::endl;
+      cerr << "Error creating public_keys." << endl;
       return 1;
     }
     if (mkdir("private_keys", mode) != 0) {
-      std::cerr << "Error creating private_keys." << std::endl;
+      cerr << "Error creating private_keys." << endl;
       return 1;
     }
     if (mkdir("metadata", mode) != 0) {
-      std::cerr << "Error creating metadata directory." << std::endl;
+      cerr << "Error creating metadata directory." << endl;
       return 1;
     }
     if (mkdir("shared_files", mode) != 0) {
-      std::cerr << "Error creating shared_files directory." << std::endl;
+      cerr << "Error creating shared_files directory." << endl;
       return 1;
     }
     // if (mkfile("metadata.json", "{\"test\":\"123\"}") != 0) {
-    //   std::cerr << "Error creating metadata.json ." << std::endl;
+    //   cerr << "Error creating metadata.json ." << endl;
     //   return 1;
     // }
     if (mkdir("filesystem", mode) != 0) {
-      std::cerr << "Error creating filesystem." << std::endl;
+      cerr << "Error creating filesystem." << endl;
       return 1;
     }
 
@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
         metadata_file << "{\"test\":\"123\"}";
         metadata_file.close();
     } else {
-    std::cerr << "Error creating metadata.json" << std::endl;
+    cerr << "Error creating metadata.json" << endl;
     return 1;
 }
 
