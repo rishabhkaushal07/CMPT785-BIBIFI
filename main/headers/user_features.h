@@ -131,6 +131,33 @@ void check_if_shared(string filename, string filesystem_path, string content) {
   }  
 }
 
+bool check_if_shared_with_user(string filename, string filesystem_path, string shared_username, string username) {
+  string randomized_filename = get_randomized_name(custom_pwd(filesystem_path) + "/" + filename, filesystem_path);
+  string randomized_user_directory = get_randomized_name("/filesystem/" + shared_username, filesystem_path);
+  string randomized_shared_directory = get_randomized_name("/filesystem/" + randomized_user_directory + "/shared", filesystem_path);
+
+  string value_to_check = "/filesystem/" + randomized_user_directory + "/" + randomized_shared_directory + "/" + username + "-" + filename;
+  vector<string> keys;
+  string filepath = filesystem_path + "/shared_files/" + randomized_filename;
+  if (fs::exists(filepath)) {
+    ifstream file(filepath);
+    string line;
+    while (getline(file, line)) {
+      size_t pos = line.find(":");
+      if (pos != string::npos) {
+        string user = line.substr(0, pos);
+        string key = line.substr(pos + 1);
+        if (user == shared_username && key == value_to_check) {
+          return true;
+        }
+      }
+    } 
+    file.close();
+  }  
+
+  return false;
+}
+
 // for mkfile; returns existing random name if file already exits, returns new random name otherwise.
 // for mkdir; returns "" if dir already exists
 string get_enc_filename(string filename, string path, string filesystem_path, bool ismkdir) {
@@ -544,6 +571,8 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
 
       if (filename.find('/') != string::npos) {
         cout << "File name cannot contain /" << endl;
+      } else if (check_if_shared_with_user(filename, filesystem_path, share_username, user_name)) {
+        cout << filename << " has already been shared with " << share_username << endl;
       } else {
         share_file(key, share_username, filename, filesystem_path, user_name);
       }
