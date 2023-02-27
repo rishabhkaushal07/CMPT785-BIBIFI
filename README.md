@@ -28,10 +28,10 @@ for the new shell will be "/", with personal and shared directories available fo
 
 - 2 types of users (1 admin, N users)
     - User features
-    - `cd <directory>`   - The user will provide the directory to move to. It should accept `.` and `..` as current and
-      parent directories respectively and support changing multiple directories at once (cd ../../dir1/dir2). cd /
-      should take you to the current user’s root directory. If a directory doesn't exist, the user should stay in the
-      current directory.
+        - `cd <directory>`   - The user will provide the directory to move to. It should accept `.` and `..` as current and
+          parent directories respectively and support changing multiple directories at once (cd ../../dir1/dir2). cd /
+          should take you to the current user’s root directory. If a directory doesn't exist, the user should stay in the
+          current directory.
         - `pwd`   - Print the current directory. Each user should have /personal and /shared base directories.
         - `ls`   - List the files and directories in the current directory separated by a new line. You need to show the
           directories `.` and `..` as well. To differentiate between a file and a directory, the output should look as
@@ -62,16 +62,17 @@ for the new shell will be "/", with personal and shared directories available fo
 ## Design Decisions for preventing Specific attacks
 
 ### `cd` command
-- It doesn't go outside the valid root path which prevents unauthorization access.
+- It doesn't go outside the valid root path which prevents unauthorization access and directory traversal attacks.
 - It doesn't accept `backticks` for the directory name which prevents arbitrary code execution or code injection attacks.
 
 ### `mkdir <directory_name>` command
-- It doesn't go outside the valid root path which prevents unauthorization access.
+- It doesn't go outside the valid root path which prevents unauthorization access and directory traversal attacks.
 - It doesn't accept `backticks` for the directory name which prevents arbitrary code execution or code injection attacks.
+- It does not accept spaces in the directory names.
 
 ### `mkfile <filename> <contents>` command
-- It doesn't go outside the valid root path
-- It doesn't accept `backticks` for the directory name which prevents arbitrary code execution in some ways.
+- It doesn't go outside the valid root path of the user which prevents directory traversal attacks.
+- It doesn't accept `backticks` for the directory name which prevents arbitrary code execution or code injection attacks.
 - filename can have a max length of 255 characters which can prevent denial of service attack.
 - [Checks for valid filenames](https://stackoverflow.com/questions/11794144/regular-expression-for-valid-filename)
   - This guarantees that solely the letters of the English alphabet are employed.
@@ -88,13 +89,17 @@ for the new shell will be "/", with personal and shared directories available fo
     - `.gitignore`
     - `.htaccess`
 
+### `Encryption Algorithm`
+- While it is difficult to declare one cryptographic algorithm absolutely better than all others, in case of file system encryption, using AES was a good bet. 
+- Decided to use AES in GCM mode with sufficiently large key and tag sizes, to have message authentication in place, which would avoid attacks on data integrity.
+- Security in AES GCM relies heavily on nonce uniqueness, therefore, a unique IV is being generated for each file to be encrypted.
 
 
 ## Running the program Locally
 
+To create executable named `fileserver`, run the following command:
+`g++ -std=c++17 -o fileserver main/main.cpp -L<path_to_openssl>/lib -I<path_to_openssl>/include -lssl -lcrypto`
 - Can use the following `Makefile` commands:
-  - `make all` - to run `g++ -o fileserver main/main.cpp`
-    - This will create an executable called `fileserver`
   - `make clean` - to run `rm -rf fileserver`
     - This will delete the executable called `fileserver`
 - To execute the program, enter `./fileserver keyfile_name` in the cli.
