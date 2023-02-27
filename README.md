@@ -61,6 +61,14 @@ for the new shell will be "/", with personal and shared directories available fo
 
 ## Design Decisions for preventing Specific attacks
 
+### `cd` command
+- It doesn't go outside the valid root path which prevents unauthorization access.
+- It doesn't accept `backticks` for the directory name which prevents arbitrary code execution or code injection attacks.
+
+### `mkdir <directory_name>` command
+- It doesn't go outside the valid root path which prevents unauthorization access.
+- It doesn't accept `backticks` for the directory name which prevents arbitrary code execution or code injection attacks.
+
 ### `mkfile <filename> <contents>` command
 - It doesn't go outside the valid root path
 - It doesn't accept `backticks` for the directory name which prevents arbitrary code execution in some ways.
