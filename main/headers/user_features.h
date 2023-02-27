@@ -557,13 +557,13 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
         cout << "File name not provided" << endl;
       } else if (filename.find('/') != string::npos) {
         cout << "File name cannot contain /" << endl;
-      } else if (fs::status(filename).type() == fs::file_type::directory) {
-        cerr << "File does not exist" << endl;
-      }else {
+      } else {
         string path = custom_pwd(filesystem_path) + "/" + filename;
         string encrypted_name = get_randomized_name(path, filesystem_path);
 
-        if (fs::exists(encrypted_name)) {
+        if (fs::status(encrypted_name).type() == fs::file_type::directory) {
+          cerr << "File does not exist" << endl;
+        } else if (fs::exists(encrypted_name)) {
           if (user_type == admin) {
             string pwd = get_decrypted_file_path(custom_pwd(filesystem_path), filesystem_path);
             string user_for_key = get_username_from_path(pwd);
