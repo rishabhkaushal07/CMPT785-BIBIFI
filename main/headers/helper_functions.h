@@ -17,7 +17,7 @@
 using namespace std;
 namespace fs = std::filesystem;
 
-int mkfile(std::string filename, std::string contents) {
+int mkfile(string filename, string contents) {
 
   ofstream file;
   file.open(filename);
