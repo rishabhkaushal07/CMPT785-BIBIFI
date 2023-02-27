@@ -170,12 +170,16 @@ string get_enc_filename(string filename, string path, string filesystem_path, bo
     fs::file_status status = fs::status(entry_path);
     string decrypted_name = decrypt_filename(entry_path, filesystem_path);
     // return same path if a file with same name exists
-    if (!ismkdir && filename == decrypted_name && status.type() == fs::file_type::regular) {
-      return entry_path;
+    if (filename == decrypted_name && status.type() == fs::file_type::regular) {
+      if (!ismkdir)
+        return entry_path;
+      else {
+        cerr << "A file with the same name exists in the current path. Choose a different name." << endl;
+        return "";
+      }
     }
     else if (filename == decrypted_name && status.type() == fs::file_type::directory) {
-      if (!ismkdir)
-        cout << "A directory with the same name exists in the current path. Choose a different name." << endl;
+      cerr << "A directory with the same name exists in the current path. Choose a different name." << endl;
       return "";
     }
   }
@@ -188,19 +192,6 @@ void make_directory(string directory_name, string &filesystem_path, string usern
     return;
   }
 
-  for (fs::directory_entry entry : fs::directory_iterator(fs::current_path())) {
-    string entry_path = entry.path();
-    int delete_upto = entry_path.find_last_of('/') + 1;
-    entry_path.erase(0, delete_upto);
-
-    string decrypted_name = decrypt_filename(entry_path, filesystem_path);
-
-    if (directory_name == decrypted_name) {
-      cerr << "A file with the same name already exists" << endl;
-      return;
-    }
-  }
-
   if (directory_name.find('/') != string::npos) {
     cout << "Directory name cannot contain /" << endl;
   } else {
@@ -210,9 +201,6 @@ void make_directory(string directory_name, string &filesystem_path, string usern
     encrypted_name = get_enc_filename(directory_name, path, filesystem_path, true);
     if (encrypted_name != ""){
       system(("mkdir " + encrypted_name).c_str());
-    }
-    else{
-      cerr << "Directory already exists" << endl;
     }
   }
 }
