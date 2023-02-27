@@ -226,6 +226,11 @@ string get_decrypted_file_path(string path, string filesystem_path) {
 }
 
 string get_encrypted_file_path(string path, string filesystem_path) {
+
+  if ((path == ".") || (path == "./")) {
+    return path;
+  }
+
   string pwd = custom_pwd(filesystem_path);
   size_t pos = 0;
   string delimiter = "/";
