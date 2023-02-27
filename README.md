@@ -58,6 +58,32 @@ for the new shell will be "/", with personal and shared directories available fo
           used by the user to access the filesystem. If a user with this name already exists, print "User <username>
           already exists"
 
+
+## Design Decisions for preventing Specific attacks
+
+### `mkfile <filename> <contents>` command
+- It doesn't go outside the valid root path
+- It doesn't accept `backticks` for the directory name which prevents arbitrary code execution in some ways.
+- filename can have a max length of 255 characters which can prevent denial of service attack.
+- [Checks for valid filenames](https://stackoverflow.com/questions/11794144/regular-expression-for-valid-filename)
+  - This guarantees that solely the letters of the English alphabet are employed.
+  - There are no spaces at the start or end.
+  - Also makes certain that the file has an extension of at least one character and does not contain any white space.
+  - Examples: `web.config, hosts, .gitignore, httpd.conf, .htaccess`.
+  - The following file creations are allowed
+    - `web.config`
+    - `httpd.conf`
+    - `test.txt`
+    - `1.1`
+    - `my long file name.txt`
+  - The following file creations are NOT allowed (though in reality they're valid):
+    - `æøå.txt`
+    - `hosts`
+    - `.gitignore`
+    - `.htaccess`
+
+
+
 ## Running the program Locally
 
 - Can use the following `Makefile` commands:
