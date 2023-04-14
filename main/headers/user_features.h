@@ -761,7 +761,11 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
     } else if ((cmd == "adduser") && (user_type == admin)) {
         string new_user;
         istring_stream >> new_user;
-        add_user(new_user, filesystem_path, false);
+        if (!(new_user.length() > 0)) {
+          cerr << "Please enter a username" << endl;
+        } else {
+          add_user(new_user, filesystem_path, false);
+        }
     } else {
       cout << "Invalid Command" << endl;
     }
