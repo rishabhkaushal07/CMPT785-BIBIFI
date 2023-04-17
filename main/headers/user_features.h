@@ -398,6 +398,15 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
       if(contains_backticks(directory_name)) {
         cerr << "Error: directory name should not contain `backticks`, try again." << endl;
       } else {
+
+        if (directory_name == "~" || directory_name == "/"){
+            // This should vary depending upon what kind of user is currently logged in
+            // cd ~ should take you to the current user’s root directory
+            fs::current_path(root_path);
+
+            continue;
+        }
+
         directory_name = normalize_path(directory_name);
         directory_name = get_encrypted_file_path(directory_name, filesystem_path);
 
@@ -406,6 +415,13 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
             // do nothing and continue
             continue;
 
+        }
+
+        if (!(fs::exists(directory_name) && fs::is_directory(directory_name))) {
+            // Check early for linux machines
+            // If a directory doesn't exist, the user should stay in the current directory
+
+            continue;
         }
 
         // construct a target (absolute) path from the directory name
@@ -519,9 +535,9 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
             // cd / should take you to the current user’s root directory
             fs::current_path(root_path);
           } else {
-            // if the directory path is outside the root path
+            // Allow relative paths only
             // Warn and stay in the current directory
-            cerr << "Directory is outside of the root directory." << endl;
+            cerr << "Give a relative path." << endl;
             cout << "Staying in current directory." << endl;
           }
         }
@@ -582,7 +598,6 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
             cout << decrypt_file(encrypted_name, key) << endl;
           }
         } else {
-          cout<<custom_pwd(filesystem_path) + "/" + filename<< endl;
           cout << "File does not exist" << endl;
         }
       }
@@ -786,6 +801,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
     } else {
       cout << "Invalid Command" << endl;
     }
+    cmd = "";
   } while (cmd != "exit"); // only exit out of command line when using "exit" cmd
 
   return 1;
