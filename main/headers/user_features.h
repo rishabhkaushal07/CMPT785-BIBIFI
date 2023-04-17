@@ -138,7 +138,28 @@ bool check_if_shared_with_user(string filename, string filesystem_path, string s
 
   string value_to_check = "/filesystem/" + randomized_user_directory + "/" + randomized_shared_directory + "/" + username + "-" + filename;
   vector<string> keys;
-  string filepath = filesystem_path + "/shared_files/" + randomized_filename;
+  string filepath = filesystem_path + "/shared_files/";
+
+  for (auto& entry : fs::directory_iterator(filepath))
+  {
+      if (fs::is_regular_file(entry))
+      {
+          std::ifstream file(entry.path());
+          std::string line;
+          while (getline(file, line)) {
+            size_t pos = line.find(":");
+            if (pos != string::npos) {
+              string key = line.substr(pos + 1);
+              if (key == value_to_check) {
+                return true;
+              }
+            }
+          } 
+
+          file.close();
+      }
+  }
+
   if (fs::exists(filepath)) {
     ifstream file(filepath);
     string line;
@@ -588,7 +609,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
       if (filename.find('/') != string::npos) {
         cout << "File name cannot contain /" << endl;
       } else if (check_if_shared_with_user(filename, filesystem_path, share_username, user_name)) {
-        cout << filename << " has already been shared with " << share_username << endl;
+        cout << "A file with name " << filename << " has already been shared with " << share_username << endl;
       } else {
         share_file(key, share_username, filename, filesystem_path, user_name);
       }
