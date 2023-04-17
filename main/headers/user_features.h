@@ -780,6 +780,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
     } else {
       cout << "Invalid Command" << endl;
     }
+    cmd = "";
   } while (cmd != "exit"); // only exit out of command line when using "exit" cmd
 
   return 1;
