@@ -33,7 +33,7 @@ void add_user(const string& username, string path, bool admin=false)
     }
 
     // Check that the username only contains letters, numbers, and underscores
-    std::regex username_regex("^[a-zA-Z0-9_]*$");
+    std::regex username_regex("^[a-zA-Z0-9]*$");
     if (!std::regex_match(username, username_regex)) {
         cout << "Error: Username contains invalid characters." << endl;
         return;
