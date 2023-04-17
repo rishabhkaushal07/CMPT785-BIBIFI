@@ -577,7 +577,6 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
             cout << decrypt_file(encrypted_name, key) << endl;
           }
         } else {
-          cout<<custom_pwd(filesystem_path) + "/" + filename<< endl;
           cout << "File does not exist" << endl;
         }
       }
