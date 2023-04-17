@@ -138,7 +138,28 @@ bool check_if_shared_with_user(string filename, string filesystem_path, string s
 
   string value_to_check = "/filesystem/" + randomized_user_directory + "/" + randomized_shared_directory + "/" + username + "-" + filename;
   vector<string> keys;
-  string filepath = filesystem_path + "/shared_files/" + randomized_filename;
+  string filepath = filesystem_path + "/shared_files/";
+
+  for (auto& entry : fs::directory_iterator(filepath))
+  {
+      if (fs::is_regular_file(entry))
+      {
+          std::ifstream file(entry.path());
+          std::string line;
+          while (getline(file, line)) {
+            size_t pos = line.find(":");
+            if (pos != string::npos) {
+              string key = line.substr(pos + 1);
+              if (key == value_to_check) {
+                return true;
+              }
+            }
+          } 
+
+          file.close();
+      }
+  }
+
   if (fs::exists(filepath)) {
     ifstream file(filepath);
     string line;
@@ -377,6 +398,15 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
       if(contains_backticks(directory_name)) {
         cerr << "Error: directory name should not contain `backticks`, try again." << endl;
       } else {
+
+        if (directory_name == "~" || directory_name == "/"){
+            // This should vary depending upon what kind of user is currently logged in
+            // cd ~ should take you to the current user’s root directory
+            fs::current_path(root_path);
+
+            continue;
+        }
+
         directory_name = normalize_path(directory_name);
         directory_name = get_encrypted_file_path(directory_name, filesystem_path);
 
@@ -385,6 +415,13 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
             // do nothing and continue
             continue;
 
+        }
+
+        if (!(fs::exists(directory_name) && fs::is_directory(directory_name))) {
+            // Check early for linux machines
+            // If a directory doesn't exist, the user should stay in the current directory
+
+            continue;
         }
 
         // construct a target (absolute) path from the directory name
@@ -498,9 +535,9 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
             // cd / should take you to the current user’s root directory
             fs::current_path(root_path);
           } else {
-            // if the directory path is outside the root path
+            // Allow relative paths only
             // Warn and stay in the current directory
-            cerr << "Directory is outside of the root directory." << endl;
+            cerr << "Give a relative path." << endl;
             cout << "Staying in current directory." << endl;
           }
         }
@@ -561,7 +598,6 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
             cout << decrypt_file(encrypted_name, key) << endl;
           }
         } else {
-          cout<<custom_pwd(filesystem_path) + "/" + filename<< endl;
           cout << "File does not exist" << endl;
         }
       }
@@ -573,7 +609,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
       if (filename.find('/') != string::npos) {
         cout << "File name cannot contain /" << endl;
       } else if (check_if_shared_with_user(filename, filesystem_path, share_username, user_name)) {
-        cout << filename << " has already been shared with " << share_username << endl;
+        cout << "A file with name " << filename << " has already been shared with " << share_username << endl;
       } else {
         share_file(key, share_username, filename, filesystem_path, user_name);
       }
@@ -769,6 +805,7 @@ int user_features(string user_name, User_type user_type, vector<uint8_t> key, st
     } else {
       cout << "Invalid Command" << endl;
     }
+    cmd = "";
   } while (cmd != "exit"); // only exit out of command line when using "exit" cmd
 
   return 1;
