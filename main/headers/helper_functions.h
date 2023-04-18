@@ -374,4 +374,10 @@ void create_init_fs_for_user(string username, string path) {
   umask(old_umask); // Restore the original umask value
 }
 
+void append_to_user_list(string path, string username){
+   ofstream outfile(path, ios_base::app);
+   outfile << username << "\n";
+   outfile.close();
+}
+
 #endif // CMPT785_BIBIFI_HELPER_FUNCTIONS_H

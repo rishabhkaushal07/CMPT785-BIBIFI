@@ -46,7 +46,7 @@ void add_user(const string& username, string path, bool admin=false)
 
     std::filesystem::path pri_key_file = path + "private_keys/" + username;
     // Generate SSH key pair
-    std::string ssh_keygen_cmd = "ssh-keygen -t rsa -b 2048 -f " + pri_key_file.string() + " -N '' -q";
+    std::string ssh_keygen_cmd = "ssh-keygen -t rsa -b 2048 -C 'created_by_encrypted_fs' -f " + pri_key_file.string() + " -N '' -q";
     system(ssh_keygen_cmd.c_str());
     // Move public key to public key directory
     std::filesystem::path temp_file = path + "private_keys/" + (username + ".pub");
@@ -57,6 +57,7 @@ void add_user(const string& username, string path, bool admin=false)
 
     std::cout << "User " << username << " added successfully." << std::endl;
     add_enc_key_to_metadata(username, path);
+    append_to_user_list(path + "metadata/unames", username);
     create_init_fs_for_user(username, path);
 }
 
@@ -87,7 +88,18 @@ bool is_valid_keyfile(const string &username)
     std::string public_key((std::istreambuf_iterator<char>(public_key_file)), std::istreambuf_iterator<char>());
     public_key_file.close();
 
-    return expected_public_key == public_key;
+    bool is_created_by_encrypted_fs = public_key.find("created_by_encrypted_fs") != std::string::npos;
+    bool is_user_in_list = false;
+    ifstream unames("metadata/unames");
+    string line;
+    while (getline(unames, line)) {
+        if (line.find(username) != string::npos) {
+            is_user_in_list = true;
+        }
+    }
+
+
+    return expected_public_key == public_key && is_created_by_encrypted_fs && is_user_in_list;
 }
 
 string get_type_of_user(const std::string &keyfile_name)
